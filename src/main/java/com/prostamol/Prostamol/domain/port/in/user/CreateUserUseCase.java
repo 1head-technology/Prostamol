@@ -1,0 +1,13 @@
+package com.prostamol.Prostamol.domain.port.in.user;
+
+import com.prostamol.Prostamol.domain.model.user.User;
+
+public interface CreateUserUseCase {
+    User execute(Command command);
+
+    record Command(
+        String email,
+        String name,
+        String defaultCurrency
+    ) {}
+}
