@@ -7,6 +7,7 @@ public interface CreateUserUseCase {
 
     record Command(
         String email,
+        String password,
         String name,
         String defaultCurrency
     ) {}

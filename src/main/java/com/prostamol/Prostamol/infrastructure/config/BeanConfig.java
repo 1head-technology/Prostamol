@@ -1,5 +1,6 @@
 package com.prostamol.Prostamol.infrastructure.config;
 
+import com.prostamol.Prostamol.application.usecase.auth.LoginService;
 import com.prostamol.Prostamol.application.usecase.account.CreateAccountService;
 import com.prostamol.Prostamol.application.usecase.account.GetAccountBalanceService;
 import com.prostamol.Prostamol.application.usecase.account.GetAccountsService;
@@ -16,6 +17,7 @@ import com.prostamol.Prostamol.application.usecase.transaction.RecordTransaction
 import com.prostamol.Prostamol.application.usecase.transaction.RecordTransferService;
 import com.prostamol.Prostamol.application.usecase.user.CreateUserService;
 import com.prostamol.Prostamol.application.usecase.user.GetUserService;
+import com.prostamol.Prostamol.domain.port.in.auth.LoginUseCase;
 import com.prostamol.Prostamol.domain.port.in.account.CreateAccountUseCase;
 import com.prostamol.Prostamol.domain.port.in.account.GetAccountBalanceUseCase;
 import com.prostamol.Prostamol.domain.port.in.account.GetAccountsUseCase;
@@ -32,6 +34,7 @@ import com.prostamol.Prostamol.domain.port.in.transaction.RecordTransactionUseCa
 import com.prostamol.Prostamol.domain.port.in.transaction.RecordTransferUseCase;
 import com.prostamol.Prostamol.domain.port.in.user.CreateUserUseCase;
 import com.prostamol.Prostamol.domain.port.in.user.GetUserUseCase;
+import com.prostamol.Prostamol.domain.port.out.PasswordEncoderPort;
 import com.prostamol.Prostamol.domain.port.out.*;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -39,11 +42,24 @@ import org.springframework.context.annotation.Configuration;
 @Configuration
 public class BeanConfig {
 
-    // ── User ──────────────────────────────────────────────────────────────────
+    // ── Auth ─────────────────────────────────────────────────────────────────────
 
     @Bean
-    public CreateUserUseCase createUserUseCase(UserRepositoryPort userRepository) {
-        return new CreateUserService(userRepository);
+    public LoginUseCase loginUseCase(
+        UserRepositoryPort userRepository,
+        PasswordEncoderPort passwordEncoder
+    ) {
+        return new LoginService(userRepository, passwordEncoder);
+    }
+
+    // ── User ────────────────────────────────────────────────────────────────────
+
+    @Bean
+    public CreateUserUseCase createUserUseCase(
+        UserRepositoryPort userRepository,
+        PasswordEncoderPort passwordEncoder
+    ) {
+        return new CreateUserService(userRepository, passwordEncoder);
     }
 
     @Bean
@@ -54,8 +70,10 @@ public class BeanConfig {
     // ── Account ───────────────────────────────────────────────────────────────
 
     @Bean
-    public CreateAccountUseCase createAccountUseCase(AccountRepositoryPort accountRepository,
-                                                      UserRepositoryPort userRepository) {
+    public CreateAccountUseCase createAccountUseCase(
+        AccountRepositoryPort accountRepository,
+        UserRepositoryPort userRepository
+    ) {
         return new CreateAccountService(accountRepository, userRepository);
     }
 
@@ -65,23 +83,29 @@ public class BeanConfig {
     }
 
     @Bean
-    public GetAccountBalanceUseCase getAccountBalanceUseCase(AccountRepositoryPort accountRepository,
-                                                              TransactionRepositoryPort transactionRepository) {
+    public GetAccountBalanceUseCase getAccountBalanceUseCase(
+        AccountRepositoryPort accountRepository,
+        TransactionRepositoryPort transactionRepository
+    ) {
         return new GetAccountBalanceService(accountRepository, transactionRepository);
     }
 
     // ── Transaction ───────────────────────────────────────────────────────────
 
     @Bean
-    public RecordTransactionUseCase recordTransactionUseCase(TransactionRepositoryPort transactionRepository,
-                                                              AccountRepositoryPort accountRepository,
-                                                              CategoryRepositoryPort categoryRepository) {
+    public RecordTransactionUseCase recordTransactionUseCase(
+        TransactionRepositoryPort transactionRepository,
+        AccountRepositoryPort accountRepository,
+        CategoryRepositoryPort categoryRepository
+    ) {
         return new RecordTransactionService(transactionRepository, accountRepository, categoryRepository);
     }
 
     @Bean
-    public RecordTransferUseCase recordTransferUseCase(TransactionRepositoryPort transactionRepository,
-                                                        AccountRepositoryPort accountRepository) {
+    public RecordTransferUseCase recordTransferUseCase(
+        TransactionRepositoryPort transactionRepository,
+        AccountRepositoryPort accountRepository
+    ) {
         return new RecordTransferService(transactionRepository, accountRepository);
     }
 
@@ -115,10 +139,16 @@ public class BeanConfig {
     }
 
     @Bean
-    public GetBudgetSummaryUseCase getBudgetSummaryUseCase(BudgetRepositoryPort budgetRepository,
-                                                            TransactionRepositoryPort transactionRepository,
-                                                            CategoryRepositoryPort categoryRepository) {
-        return new GetBudgetSummaryService(budgetRepository, transactionRepository, categoryRepository);
+    public GetBudgetSummaryUseCase getBudgetSummaryUseCase(
+        BudgetRepositoryPort budgetRepository,
+        TransactionRepositoryPort transactionRepository,
+        CategoryRepositoryPort categoryRepository
+    ) {
+        return new GetBudgetSummaryService(
+            budgetRepository,
+            transactionRepository,
+            categoryRepository
+        );
     }
 
     // ── Savings ───────────────────────────────────────────────────────────────

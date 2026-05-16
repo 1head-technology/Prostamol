@@ -35,6 +35,7 @@ public class UserController {
         return mapper.toResponse(createUserUseCase.execute(
             new CreateUserUseCase.Command(
                 request.email(),
+                request.password(),
                 request.name(),
                 request.defaultCurrency()
             )

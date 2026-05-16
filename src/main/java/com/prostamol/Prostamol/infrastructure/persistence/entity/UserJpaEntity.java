@@ -17,6 +17,9 @@ public class UserJpaEntity {
     @Column(nullable = false, unique = true)
     private String email;
 
+    @Column(name = "password_hash", nullable = false)
+    private String passwordHash;
+
     @Column(nullable = false)
     private String name;
 
@@ -25,9 +28,10 @@ public class UserJpaEntity {
 
     protected UserJpaEntity() {}
 
-    public UserJpaEntity(UUID id, String email, String name, String defaultCurrency) {
+    public UserJpaEntity(UUID id, String email, String passwordHash, String name, String defaultCurrency) {
         this.id = id;
         this.email = email;
+        this.passwordHash = passwordHash;
         this.name = name;
         this.defaultCurrency = defaultCurrency;
     }
@@ -37,6 +41,9 @@ public class UserJpaEntity {
     }
     public String getEmail() {
         return email;
+    }
+    public String getPasswordHash() {
+        return passwordHash;
     }
     public String getName() {
         return name;

@@ -11,6 +11,7 @@ public class UserPersistenceMapper {
         return new User(
             entity.getId(),
             entity.getEmail(),
+            entity.getPasswordHash(),
             entity.getName(),
             entity.getDefaultCurrency()
         );
@@ -20,6 +21,7 @@ public class UserPersistenceMapper {
         return new UserJpaEntity(
             user.getId(),
             user.getEmail(),
+            user.getPasswordHash(),
             user.getName(),
             user.getDefaultCurrency()
         );
