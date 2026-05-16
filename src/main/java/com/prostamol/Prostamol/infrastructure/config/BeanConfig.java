@@ -4,6 +4,7 @@ import com.prostamol.Prostamol.application.usecase.auth.LoginService;
 import com.prostamol.Prostamol.application.usecase.account.CreateAccountService;
 import com.prostamol.Prostamol.application.usecase.account.GetAccountBalanceService;
 import com.prostamol.Prostamol.application.usecase.account.GetAccountsService;
+import com.prostamol.Prostamol.application.usecase.auth.SignupService;
 import com.prostamol.Prostamol.application.usecase.budget.CreateBudgetService;
 import com.prostamol.Prostamol.application.usecase.budget.GetBudgetSummaryService;
 import com.prostamol.Prostamol.application.usecase.budget.GetBudgetsService;
@@ -21,6 +22,7 @@ import com.prostamol.Prostamol.domain.port.in.auth.LoginUseCase;
 import com.prostamol.Prostamol.domain.port.in.account.CreateAccountUseCase;
 import com.prostamol.Prostamol.domain.port.in.account.GetAccountBalanceUseCase;
 import com.prostamol.Prostamol.domain.port.in.account.GetAccountsUseCase;
+import com.prostamol.Prostamol.domain.port.in.auth.SignupUseCase;
 import com.prostamol.Prostamol.domain.port.in.budget.CreateBudgetUseCase;
 import com.prostamol.Prostamol.domain.port.in.budget.GetBudgetSummaryUseCase;
 import com.prostamol.Prostamol.domain.port.in.budget.GetBudgetsUseCase;
@@ -43,6 +45,14 @@ import org.springframework.context.annotation.Configuration;
 public class BeanConfig {
 
     // ── Auth ─────────────────────────────────────────────────────────────────────
+
+    @Bean
+    public SignupUseCase signupUseCase(
+        UserRepositoryPort userRepository,
+        PasswordEncoderPort passwordEncoder
+    ) {
+        return new SignupService(userRepository, passwordEncoder);
+    }
 
     @Bean
     public LoginUseCase loginUseCase(

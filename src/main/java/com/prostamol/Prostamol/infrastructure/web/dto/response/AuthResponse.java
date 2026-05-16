@@ -1,9 +1,8 @@
 package com.prostamol.Prostamol.infrastructure.web.dto.response;
 
-import java.util.UUID;
+import com.prostamol.Prostamol.domain.model.user.User;
 
 public record AuthResponse(
     String token,
-    UUID userId,
-    String email
+    User user
 ) {}
