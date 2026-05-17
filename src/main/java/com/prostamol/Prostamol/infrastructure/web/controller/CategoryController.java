@@ -7,6 +7,7 @@ import com.prostamol.Prostamol.infrastructure.web.dto.request.CreateCategoryRequ
 import com.prostamol.Prostamol.infrastructure.web.dto.response.CategoryResponse;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -28,9 +29,29 @@ public class CategoryController {
         this.getCategories = getCategories;
     }
 
-    @PostMapping("/users/{userId}/categories")
+    // ── Authenticated user endpoints ─────────────────────────────────────────
+
+    @PostMapping("/categories")
     @ResponseStatus(HttpStatus.CREATED)
     public CategoryResponse create(
+        @AuthenticationPrincipal UUID userId,
+        @Valid @RequestBody CreateCategoryRequest request
+    ) {
+        return toResponse(createCategory.execute(
+            new CreateCategoryUseCase.Command(userId, request.name(), request.type())
+        ));
+    }
+
+    @GetMapping("/categories")
+    public List<CategoryResponse> list(@AuthenticationPrincipal UUID userId) {
+        return getCategories.execute(userId).stream().map(this::toResponse).collect(Collectors.toList());
+    }
+
+    // ── Admin endpoints ──────────────────────────────────────────────────────
+
+    @PostMapping("/users/{userId}/categories")
+    @ResponseStatus(HttpStatus.CREATED)
+    public CategoryResponse createByAdmin(
         @PathVariable UUID userId,
         @Valid @RequestBody CreateCategoryRequest request
     ) {
@@ -40,7 +61,7 @@ public class CategoryController {
     }
 
     @GetMapping("/users/{userId}/categories")
-    public List<CategoryResponse> list(@PathVariable UUID userId) {
+    public List<CategoryResponse> listByAdmin(@PathVariable UUID userId) {
         return getCategories.execute(userId).stream().map(this::toResponse).collect(Collectors.toList());
     }
 

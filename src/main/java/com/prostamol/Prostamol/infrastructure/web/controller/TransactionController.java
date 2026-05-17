@@ -11,6 +11,7 @@ import com.prostamol.Prostamol.infrastructure.web.mapper.TransactionWebMapper;
 import jakarta.validation.Valid;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDate;
@@ -39,10 +40,12 @@ public class TransactionController {
         this.mapper = mapper;
     }
 
-    @PostMapping("/users/{userId}/transactions")
+    // ── Authenticated user endpoints ─────────────────────────────────────────
+
+    @PostMapping("/transactions")
     @ResponseStatus(HttpStatus.CREATED)
     public TransactionResponse record(
-        @PathVariable UUID userId,
+        @AuthenticationPrincipal UUID userId,
         @Valid @RequestBody RecordTransactionRequest request
     ) {
         return mapper.toResponse(recordTransaction.execute(new RecordTransactionUseCase.Command(
@@ -60,15 +63,26 @@ public class TransactionController {
 
     @PostMapping("/transfers")
     @ResponseStatus(HttpStatus.CREATED)
-    public List<TransactionResponse> transfer(@Valid @RequestBody RecordTransferRequest request) {
+    public List<TransactionResponse> transfer(
+        @AuthenticationPrincipal UUID userId,
+        @Valid @RequestBody RecordTransferRequest request
+    ) {
         return recordTransfer.execute(new RecordTransferUseCase.Command(
-            request.userId(),
+            userId,
             request.sourceAccountId(),
             request.destinationAccountId(),
             Money.of(request.amount(), request.currency()),
             request.date(),
             request.description()
         ))
+            .stream()
+            .map(mapper::toResponse)
+            .collect(Collectors.toList());
+    }
+
+    @GetMapping("/transactions")
+    public List<TransactionResponse> list(@AuthenticationPrincipal UUID userId) {
+        return getTransactions.execute(userId)
             .stream()
             .map(mapper::toResponse)
             .collect(Collectors.toList());
@@ -86,8 +100,29 @@ public class TransactionController {
             .collect(Collectors.toList());
     }
 
+    // ── Admin endpoints ──────────────────────────────────────────────────────
+
+    @PostMapping("/users/{userId}/transactions")
+    @ResponseStatus(HttpStatus.CREATED)
+    public TransactionResponse recordByAdmin(
+        @PathVariable UUID userId,
+        @Valid @RequestBody RecordTransactionRequest request
+    ) {
+        return mapper.toResponse(recordTransaction.execute(new RecordTransactionUseCase.Command(
+            userId,
+            request.accountId(),
+            request.type(),
+            Money.of(request.amount(), request.currency()),
+            request.date(),
+            request.description(),
+            request.categoryId(),
+            request.recurring(),
+            request.recurrenceFrequency()
+        )));
+    }
+
     @GetMapping("/users/{userId}/transactions")
-    public List<TransactionResponse> byUser(@PathVariable UUID userId) {
+    public List<TransactionResponse> listByAdmin(@PathVariable UUID userId) {
         return getTransactions.execute(userId)
             .stream()
             .map(mapper::toResponse)
