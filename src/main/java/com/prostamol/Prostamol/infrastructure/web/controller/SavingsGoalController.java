@@ -10,6 +10,7 @@ import com.prostamol.Prostamol.infrastructure.web.dto.response.SavingsGoalRespon
 import com.prostamol.Prostamol.infrastructure.web.mapper.SavingsGoalWebMapper;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -37,10 +38,12 @@ public class SavingsGoalController {
         this.mapper = mapper;
     }
 
-    @PostMapping("/users/{userId}/savings-goals")
+    // ── Authenticated user endpoints ─────────────────────────────────────────
+
+    @PostMapping("/savings-goals")
     @ResponseStatus(HttpStatus.CREATED)
     public SavingsGoalResponse create(
-        @PathVariable UUID userId,
+        @AuthenticationPrincipal UUID userId,
         @Valid @RequestBody CreateSavingsGoalRequest request
     ) {
         return mapper.toResponse(createGoal.execute(new CreateSavingsGoalUseCase.Command(
@@ -50,8 +53,8 @@ public class SavingsGoalController {
         )));
     }
 
-    @GetMapping("/users/{userId}/savings-goals")
-    public List<SavingsGoalResponse> list(@PathVariable UUID userId) {
+    @GetMapping("/savings-goals")
+    public List<SavingsGoalResponse> list(@AuthenticationPrincipal UUID userId) {
         return getGoals.execute(userId).stream()
             .map(mapper::toResponse)
             .collect(Collectors.toList());
@@ -65,5 +68,27 @@ public class SavingsGoalController {
         return mapper.toResponse(addContribution.execute(
             goalId, Money.of(request.amount(), request.currency())
         ));
+    }
+
+    // ── Admin endpoints ──────────────────────────────────────────────────────
+
+    @PostMapping("/users/{userId}/savings-goals")
+    @ResponseStatus(HttpStatus.CREATED)
+    public SavingsGoalResponse createByAdmin(
+        @PathVariable UUID userId,
+        @Valid @RequestBody CreateSavingsGoalRequest request
+    ) {
+        return mapper.toResponse(createGoal.execute(new CreateSavingsGoalUseCase.Command(
+            userId, request.name(),
+            Money.of(request.targetAmount(), request.currency()),
+            request.deadline()
+        )));
+    }
+
+    @GetMapping("/users/{userId}/savings-goals")
+    public List<SavingsGoalResponse> listByAdmin(@PathVariable UUID userId) {
+        return getGoals.execute(userId).stream()
+            .map(mapper::toResponse)
+            .collect(Collectors.toList());
     }
 }

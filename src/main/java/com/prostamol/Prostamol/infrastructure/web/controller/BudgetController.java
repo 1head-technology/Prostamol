@@ -11,6 +11,7 @@ import com.prostamol.Prostamol.infrastructure.web.dto.response.BudgetSummaryResp
 import com.prostamol.Prostamol.infrastructure.web.mapper.BudgetWebMapper;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -38,9 +39,45 @@ public class BudgetController {
         this.mapper = mapper;
     }
 
-    @PostMapping("/users/{userId}/budgets")
+    // ── Authenticated user endpoints ─────────────────────────────────────────
+
+    @PostMapping("/budgets")
     @ResponseStatus(HttpStatus.CREATED)
     public BudgetResponse create(
+        @AuthenticationPrincipal UUID userId,
+        @Valid @RequestBody CreateBudgetRequest request
+    ) {
+        var lines = request.lines().stream()
+            .map(l -> new CreateBudgetUseCase.LineCommand(l.categoryId(), Money.of(l.plannedAmount(), l.currency())))
+            .collect(Collectors.toList());
+
+        return mapper.toResponse(createBudget.execute(
+            new CreateBudgetUseCase.Command(
+                userId,
+                request.name(),
+                new DateRange(request.from(), request.to()),
+                lines
+            )
+        ));
+    }
+
+    @GetMapping("/budgets")
+    public List<BudgetResponse> list(@AuthenticationPrincipal UUID userId) {
+        return getBudgets.execute(userId).stream()
+            .map(mapper::toResponse)
+            .collect(Collectors.toList());
+    }
+
+    @GetMapping("/budgets/{budgetId}/summary")
+    public BudgetSummaryResponse summary(@PathVariable UUID budgetId) {
+        return mapper.toSummaryResponse(getSummary.execute(budgetId));
+    }
+
+    // ── Admin endpoints ──────────────────────────────────────────────────────
+
+    @PostMapping("/users/{userId}/budgets")
+    @ResponseStatus(HttpStatus.CREATED)
+    public BudgetResponse createByAdmin(
         @PathVariable UUID userId,
         @Valid @RequestBody CreateBudgetRequest request
     ) {
@@ -59,14 +96,9 @@ public class BudgetController {
     }
 
     @GetMapping("/users/{userId}/budgets")
-    public List<BudgetResponse> list(@PathVariable UUID userId) {
+    public List<BudgetResponse> listByAdmin(@PathVariable UUID userId) {
         return getBudgets.execute(userId).stream()
             .map(mapper::toResponse)
             .collect(Collectors.toList());
-    }
-
-    @GetMapping("/budgets/{budgetId}/summary")
-    public BudgetSummaryResponse summary(@PathVariable UUID budgetId) {
-        return mapper.toSummaryResponse(getSummary.execute(budgetId));
     }
 }

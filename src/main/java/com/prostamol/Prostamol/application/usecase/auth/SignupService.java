@@ -17,7 +17,6 @@ public class SignupService implements SignupUseCase {
         this.passwordEncoder = passwordEncoder;
     }
 
-
     @Override
     public User execute(Command command) {
         CreateUserService createUserService = new CreateUserService(this.userRepository, this.passwordEncoder);

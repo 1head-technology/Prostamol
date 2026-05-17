@@ -33,7 +33,7 @@ public class AuthController {
     }
 
     @PostMapping("/signup")
-    public AuthResponse login(@Valid @RequestBody @NonNull SignupRequest request) {
+    public AuthResponse signup(@Valid @RequestBody @NonNull SignupRequest request) {
         SignupUseCase.Command signupCommand = new SignupUseCase.Command(
             request.email(),
             request.password(),
