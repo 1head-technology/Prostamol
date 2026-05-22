@@ -7,13 +7,14 @@ import com.prostamol.Prostamol.infrastructure.web.dto.response.UserResponse;
 import com.prostamol.Prostamol.infrastructure.web.mapper.UserWebMapper;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.UUID;
 
 @RestController
-@RequestMapping("/api/v1/users")
+@RequestMapping("/api/v1")
 public class UserController {
 
     private final CreateUserUseCase createUserUseCase;
@@ -32,28 +33,29 @@ public class UserController {
 
     // ── Authenticated user endpoints ─────────────────────────────────────────
 
-    @GetMapping("/me")
+    @PostMapping("/users")
+    @ResponseStatus(HttpStatus.CREATED)
+    public UserResponse createByAdmin(@Valid @RequestBody CreateUserRequest request) {
+        CreateUserUseCase.Command createUserCommand = new CreateUserUseCase.Command(
+            request.email(),
+            request.password(),
+            request.name(),
+            request.defaultCurrency()
+        );
+
+        return mapper.toResponse(createUserUseCase.execute(createUserCommand));
+    }
+
+    @GetMapping("/users/me")
     public UserResponse me(@AuthenticationPrincipal UUID userId) {
         return mapper.toResponse(getUserUseCase.execute(userId));
     }
 
     // ── Admin endpoints ──────────────────────────────────────────────────────
 
-    @PostMapping
-    @ResponseStatus(HttpStatus.CREATED)
-    public UserResponse createByAdmin(@Valid @RequestBody CreateUserRequest request) {
-        return mapper.toResponse(createUserUseCase.execute(
-            new CreateUserUseCase.Command(
-                request.email(),
-                request.password(),
-                request.name(),
-                request.defaultCurrency()
-            )
-        ));
-    }
-
-    @GetMapping("/{id}")
-    public UserResponse getByAdmin(@PathVariable UUID id) {
-        return mapper.toResponse(getUserUseCase.execute(id));
+    @PreAuthorize("hasRole('ADMIN')")
+    @GetMapping("/admin/users/{userId}")
+    public UserResponse getByAdmin(@PathVariable UUID userId) {
+        return mapper.toResponse(getUserUseCase.execute(userId));
     }
 }

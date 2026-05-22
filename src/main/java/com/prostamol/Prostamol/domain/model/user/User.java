@@ -9,19 +9,22 @@ public class User {
     private final String passwordHash;
     private final String name;
     private final String defaultCurrency;
+    private final Role role;
 
     public User(
         UUID id,
         String email,
         String passwordHash,
         String name,
-        String defaultCurrency
+        String defaultCurrency,
+        Role role
     ) {
         this.id = id;
         this.email = email;
         this.passwordHash = passwordHash;
         this.name = name;
         this.defaultCurrency = defaultCurrency;
+        this.role = role;
     }
 
     public UUID getId() {
@@ -38,5 +41,8 @@ public class User {
     }
     public String getDefaultCurrency() {
         return defaultCurrency;
+    }
+    public Role getRole() {
+        return role;
     }
 }

@@ -26,6 +26,10 @@ public class Account {
         this.initialBalance = initialBalance;
     }
 
+    public Account update(String name, AccountType type, Money initialBalance) {
+        return new Account(id, userId, name, type, initialBalance);
+    }
+
     public UUID getId() {
         return id;
     }

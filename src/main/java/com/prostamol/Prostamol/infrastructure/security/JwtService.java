@@ -1,5 +1,6 @@
 package com.prostamol.Prostamol.infrastructure.security;
 
+import com.prostamol.Prostamol.domain.model.user.Role;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.security.Keys;
@@ -27,12 +28,13 @@ public class JwtService {
         this.expirationMs = expirationMs;
     }
 
-    public String generateToken(@NonNull UUID userId, String email) {
+    public String generateToken(@NonNull UUID userId, String email, @NonNull Role role) {
         Instant now = Instant.now();
 
         return Jwts.builder()
             .subject(userId.toString())
             .claim("email", email)
+            .claim("role", role.name())
             .issuedAt(Date.from(now))
             .expiration(Date.from(now.plusMillis(expirationMs)))
             .signWith(key)
@@ -41,6 +43,11 @@ public class JwtService {
 
     public UUID extractUserId(String token) {
         return UUID.fromString(extractClaims(token).getSubject());
+    }
+
+    public Role extractRole(String token) {
+        String role = extractClaims(token).get("role", String.class);
+        return role != null ? Role.valueOf(role) : Role.USER;
     }
 
     public boolean isValid(String token) {
