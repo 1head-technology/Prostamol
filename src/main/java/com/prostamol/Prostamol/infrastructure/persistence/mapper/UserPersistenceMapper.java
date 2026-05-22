@@ -13,7 +13,8 @@ public class UserPersistenceMapper {
             entity.getEmail(),
             entity.getPasswordHash(),
             entity.getName(),
-            entity.getDefaultCurrency()
+            entity.getDefaultCurrency(),
+            entity.getRole()
         );
     }
 
@@ -23,7 +24,8 @@ public class UserPersistenceMapper {
             user.getEmail(),
             user.getPasswordHash(),
             user.getName(),
-            user.getDefaultCurrency()
+            user.getDefaultCurrency(),
+            user.getRole()
         );
     }
 }

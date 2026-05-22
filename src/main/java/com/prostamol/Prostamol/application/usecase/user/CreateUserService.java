@@ -1,5 +1,6 @@
 package com.prostamol.Prostamol.application.usecase.user;
 
+import com.prostamol.Prostamol.domain.model.user.Role;
 import com.prostamol.Prostamol.domain.model.user.User;
 import com.prostamol.Prostamol.domain.port.in.user.CreateUserUseCase;
 import com.prostamol.Prostamol.domain.port.out.PasswordEncoderPort;
@@ -30,7 +31,8 @@ public class CreateUserService implements CreateUserUseCase {
             command.email(),
             hashedPassword,
             command.name(),
-            command.defaultCurrency())
+            command.defaultCurrency(),
+            Role.USER)
         );
     }
 }

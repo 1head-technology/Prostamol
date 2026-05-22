@@ -7,6 +7,6 @@ import org.springframework.stereotype.Component;
 @Component
 public class UserWebMapper {
     public UserResponse toResponse(User user) {
-        return new UserResponse(user.getId(), user.getEmail(), user.getName(), user.getDefaultCurrency());
+        return new UserResponse(user.getId(), user.getEmail(), user.getName(), user.getDefaultCurrency(), user.getRole());
     }
 }

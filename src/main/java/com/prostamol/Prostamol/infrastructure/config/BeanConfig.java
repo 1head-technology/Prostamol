@@ -1,9 +1,12 @@
 package com.prostamol.Prostamol.infrastructure.config;
 
+import com.prostamol.Prostamol.application.usecase.auth.AdminLoginService;
 import com.prostamol.Prostamol.application.usecase.auth.LoginService;
 import com.prostamol.Prostamol.application.usecase.account.CreateAccountService;
 import com.prostamol.Prostamol.application.usecase.account.GetAccountBalanceService;
+import com.prostamol.Prostamol.application.usecase.account.GetAccountService;
 import com.prostamol.Prostamol.application.usecase.account.GetAccountsService;
+import com.prostamol.Prostamol.application.usecase.account.UpdateAccountService;
 import com.prostamol.Prostamol.application.usecase.auth.SignupService;
 import com.prostamol.Prostamol.application.usecase.budget.CreateBudgetService;
 import com.prostamol.Prostamol.application.usecase.budget.GetBudgetSummaryService;
@@ -18,10 +21,13 @@ import com.prostamol.Prostamol.application.usecase.transaction.RecordTransaction
 import com.prostamol.Prostamol.application.usecase.transaction.RecordTransferService;
 import com.prostamol.Prostamol.application.usecase.user.CreateUserService;
 import com.prostamol.Prostamol.application.usecase.user.GetUserService;
+import com.prostamol.Prostamol.domain.port.in.auth.AdminLoginUseCase;
 import com.prostamol.Prostamol.domain.port.in.auth.LoginUseCase;
 import com.prostamol.Prostamol.domain.port.in.account.CreateAccountUseCase;
 import com.prostamol.Prostamol.domain.port.in.account.GetAccountBalanceUseCase;
+import com.prostamol.Prostamol.domain.port.in.account.GetAccountUseCase;
 import com.prostamol.Prostamol.domain.port.in.account.GetAccountsUseCase;
+import com.prostamol.Prostamol.domain.port.in.account.UpdateAccountUseCase;
 import com.prostamol.Prostamol.domain.port.in.auth.SignupUseCase;
 import com.prostamol.Prostamol.domain.port.in.budget.CreateBudgetUseCase;
 import com.prostamol.Prostamol.domain.port.in.budget.GetBudgetSummaryUseCase;
@@ -47,11 +53,8 @@ public class BeanConfig {
     // ── Auth ─────────────────────────────────────────────────────────────────────
 
     @Bean
-    public SignupUseCase signupUseCase(
-        UserRepositoryPort userRepository,
-        PasswordEncoderPort passwordEncoder
-    ) {
-        return new SignupService(userRepository, passwordEncoder);
+    public SignupUseCase signupUseCase(CreateUserUseCase createUserUseCase) {
+        return new SignupService(createUserUseCase);
     }
 
     @Bean
@@ -60,6 +63,11 @@ public class BeanConfig {
         PasswordEncoderPort passwordEncoder
     ) {
         return new LoginService(userRepository, passwordEncoder);
+    }
+
+    @Bean
+    public AdminLoginUseCase adminLoginUseCase(UserRepositoryPort userRepository) {
+        return new AdminLoginService(userRepository);
     }
 
     // ── User ────────────────────────────────────────────────────────────────────
@@ -90,6 +98,16 @@ public class BeanConfig {
     @Bean
     public GetAccountsUseCase getAccountsUseCase(AccountRepositoryPort accountRepository) {
         return new GetAccountsService(accountRepository);
+    }
+
+    @Bean
+    public GetAccountUseCase getAccountUseCase(AccountRepositoryPort accountRepository) {
+        return new GetAccountService(accountRepository);
+    }
+
+    @Bean
+    public UpdateAccountUseCase updateAccountUseCase(AccountRepositoryPort accountRepository) {
+        return new UpdateAccountService(accountRepository);
     }
 
     @Bean
