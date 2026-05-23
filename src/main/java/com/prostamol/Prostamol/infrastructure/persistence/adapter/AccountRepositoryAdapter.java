@@ -39,4 +39,9 @@ public class AccountRepositoryAdapter implements AccountRepositoryPort {
             .map(mapper::toDomain)
             .collect(Collectors.toList());
     }
+
+    @Override
+    public void delete(UUID accountId) {
+        jpaRepository.deleteById(accountId);
+    }
 }

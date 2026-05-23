@@ -2,11 +2,7 @@ package com.prostamol.Prostamol.infrastructure.web.controller;
 
 import com.prostamol.Prostamol.domain.model.account.Account;
 import com.prostamol.Prostamol.domain.model.shared.Money;
-import com.prostamol.Prostamol.domain.port.in.account.CreateAccountUseCase;
-import com.prostamol.Prostamol.domain.port.in.account.GetAccountBalanceUseCase;
-import com.prostamol.Prostamol.domain.port.in.account.GetAccountUseCase;
-import com.prostamol.Prostamol.domain.port.in.account.GetAccountsUseCase;
-import com.prostamol.Prostamol.domain.port.in.account.UpdateAccountUseCase;
+import com.prostamol.Prostamol.domain.port.in.account.*;
 import com.prostamol.Prostamol.infrastructure.web.dto.request.CreateAccountRequest;
 import com.prostamol.Prostamol.infrastructure.web.dto.request.UpdateAccountRequest;
 import com.prostamol.Prostamol.infrastructure.web.dto.response.AccountBalanceResponse;
@@ -32,6 +28,7 @@ public class AccountController {
     private final GetAccountUseCase getAccount;
     private final GetAccountBalanceUseCase getBalance;
     private final UpdateAccountUseCase updateAccount;
+    private final DeleteAccountUseCase deleteAccount;
     private final AccountWebMapper mapper;
 
     public AccountController(
@@ -40,6 +37,7 @@ public class AccountController {
         GetAccountUseCase getAccount,
         GetAccountBalanceUseCase getBalance,
         UpdateAccountUseCase updateAccount,
+        DeleteAccountUseCase deleteAccount,
         AccountWebMapper mapper
     ) {
         this.createAccount = createAccount;
@@ -47,6 +45,7 @@ public class AccountController {
         this.getAccount = getAccount;
         this.getBalance = getBalance;
         this.updateAccount = updateAccount;
+        this.deleteAccount = deleteAccount;
         this.mapper = mapper;
     }
 
@@ -54,7 +53,7 @@ public class AccountController {
 
     @PostMapping("/accounts")
     @ResponseStatus(HttpStatus.CREATED)
-    public AccountResponse create(@AuthenticationPrincipal UUID userId, @Valid @RequestBody CreateAccountRequest request) {
+    public AccountResponse create(@AuthenticationPrincipal UUID userId, @RequestBody @Valid CreateAccountRequest request) {
         return mapper.toResponse(createAccount.execute(new CreateAccountUseCase.Command(
             userId,
             request.name(),
@@ -86,6 +85,18 @@ public class AccountController {
         }
 
         return mapper.toResponse(updateAccount.execute(toUpdateCommand(accountId, request)));
+    }
+
+    @DeleteMapping("/accounts/{accountId}")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void deleteAccount(@AuthenticationPrincipal UUID userId, @PathVariable UUID accountId) {
+        Account account = getAccount.execute(accountId);
+
+        if (!account.getUserId().equals(userId)) {
+            throw new AccessDeniedException("Account does not belong to the authenticated user");
+        }
+
+        deleteAccount.execute(accountId);
     }
 
     // ── Admin endpoints ──────────────────────────────────────────────────────

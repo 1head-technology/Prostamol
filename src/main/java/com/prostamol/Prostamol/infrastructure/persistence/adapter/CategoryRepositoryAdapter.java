@@ -34,11 +34,15 @@ public class CategoryRepositoryAdapter implements CategoryRepositoryPort {
 
     @Override
     public List<Category> findAllByUserId(UUID userId) {
-        return jpaRepository.findAllByUserId(userId).stream().map(mapper::toDomain).collect(Collectors.toList());
+        return jpaRepository.findAllByUserId(userId).stream()
+            .map(mapper::toDomain)
+            .collect(Collectors.toList());
     }
 
     @Override
     public List<Category> findAllSystemCategories() {
-        return jpaRepository.findAllBySystemTrue().stream().map(mapper::toDomain).collect(Collectors.toList());
+        return jpaRepository.findAllBySystemTrue().stream()
+            .map(mapper::toDomain)
+            .collect(Collectors.toList());
     }
 }
