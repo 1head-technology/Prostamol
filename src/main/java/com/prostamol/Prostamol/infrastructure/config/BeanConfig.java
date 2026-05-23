@@ -12,9 +12,11 @@ import com.prostamol.Prostamol.application.usecase.category.GetCategoriesService
 import com.prostamol.Prostamol.application.usecase.savings.AddSavingsContributionService;
 import com.prostamol.Prostamol.application.usecase.savings.CreateSavingsGoalService;
 import com.prostamol.Prostamol.application.usecase.savings.GetSavingsGoalsService;
+import com.prostamol.Prostamol.application.usecase.transaction.DeleteTransactionService;
 import com.prostamol.Prostamol.application.usecase.transaction.GetTransactionsService;
 import com.prostamol.Prostamol.application.usecase.transaction.RecordTransactionService;
 import com.prostamol.Prostamol.application.usecase.transaction.RecordTransferService;
+import com.prostamol.Prostamol.application.usecase.transaction.UpdateTransactionService;
 import com.prostamol.Prostamol.application.usecase.user.CreateUserService;
 import com.prostamol.Prostamol.application.usecase.user.GetUserService;
 import com.prostamol.Prostamol.domain.port.in.account.*;
@@ -29,9 +31,11 @@ import com.prostamol.Prostamol.domain.port.in.category.GetCategoriesUseCase;
 import com.prostamol.Prostamol.domain.port.in.savings.AddSavingsContributionUseCase;
 import com.prostamol.Prostamol.domain.port.in.savings.CreateSavingsGoalUseCase;
 import com.prostamol.Prostamol.domain.port.in.savings.GetSavingsGoalsUseCase;
+import com.prostamol.Prostamol.domain.port.in.transaction.DeleteTransactionUseCase;
 import com.prostamol.Prostamol.domain.port.in.transaction.GetTransactionsUseCase;
 import com.prostamol.Prostamol.domain.port.in.transaction.RecordTransactionUseCase;
 import com.prostamol.Prostamol.domain.port.in.transaction.RecordTransferUseCase;
+import com.prostamol.Prostamol.domain.port.in.transaction.UpdateTransactionUseCase;
 import com.prostamol.Prostamol.domain.port.in.user.CreateUserUseCase;
 import com.prostamol.Prostamol.domain.port.in.user.GetUserUseCase;
 import com.prostamol.Prostamol.domain.port.out.PasswordEncoderPort;
@@ -137,6 +141,19 @@ public class BeanConfig {
     @Bean
     public GetTransactionsUseCase getTransactionsUseCase(TransactionRepositoryPort transactionRepository) {
         return new GetTransactionsService(transactionRepository);
+    }
+
+    @Bean
+    public UpdateTransactionUseCase updateTransactionUseCase(
+        TransactionRepositoryPort transactionRepository,
+        CategoryRepositoryPort categoryRepository
+    ) {
+        return new UpdateTransactionService(transactionRepository, categoryRepository);
+    }
+
+    @Bean
+    public DeleteTransactionUseCase deleteTransactionUseCase(TransactionRepositoryPort transactionRepository) {
+        return new DeleteTransactionService(transactionRepository);
     }
 
     // ── Category ──────────────────────────────────────────────────────────────

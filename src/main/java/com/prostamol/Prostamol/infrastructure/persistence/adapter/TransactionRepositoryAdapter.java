@@ -8,6 +8,7 @@ import org.springframework.stereotype.Component;
 
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
@@ -31,6 +32,16 @@ public class TransactionRepositoryAdapter implements TransactionRepositoryPort {
     public List<Transaction> saveAll(List<Transaction> transactions) {
         return jpaRepository.saveAll(transactions.stream().map(mapper::toJpaEntity).collect(Collectors.toList()))
                 .stream().map(mapper::toDomain).collect(Collectors.toList());
+    }
+
+    @Override
+    public Optional<Transaction> findById(UUID id) {
+        return jpaRepository.findById(id).map(mapper::toDomain);
+    }
+
+    @Override
+    public void deleteById(UUID id) {
+        jpaRepository.deleteById(id);
     }
 
     @Override

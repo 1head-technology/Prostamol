@@ -47,6 +47,29 @@ public class Transaction {
         this.recurrenceFrequency = recurrenceFrequency;
     }
 
+    public Transaction update(
+        Money amount,
+        LocalDate date,
+        String description,
+        UUID categoryId,
+        boolean recurring,
+        RecurrenceFrequency recurrenceFrequency
+    ) {
+        return new Transaction(
+            id,
+            userId,
+            accountId,
+            type,
+            amount,
+            date,
+            description,
+            categoryId,
+            linkedTransactionId,
+            recurring,
+            recurrenceFrequency
+        );
+    }
+
     public UUID getId() {
         return id;
     }

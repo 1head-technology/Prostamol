@@ -4,11 +4,14 @@ import com.prostamol.Prostamol.domain.model.transaction.Transaction;
 
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 public interface TransactionRepositoryPort {
     Transaction save(Transaction transaction);
     List<Transaction> saveAll(List<Transaction> transactions);
+    Optional<Transaction> findById(UUID id);
+    void deleteById(UUID id);
     List<Transaction> findAllByAccountId(UUID accountId);
     List<Transaction> findAllByUserId(UUID userId);
     List<Transaction> findAllByAccountIdAndDateBetween(

@@ -1,11 +1,14 @@
 package com.prostamol.Prostamol.infrastructure.web.controller;
 
 import com.prostamol.Prostamol.domain.model.shared.Money;
+import com.prostamol.Prostamol.domain.port.in.transaction.DeleteTransactionUseCase;
 import com.prostamol.Prostamol.domain.port.in.transaction.GetTransactionsUseCase;
 import com.prostamol.Prostamol.domain.port.in.transaction.RecordTransactionUseCase;
 import com.prostamol.Prostamol.domain.port.in.transaction.RecordTransferUseCase;
+import com.prostamol.Prostamol.domain.port.in.transaction.UpdateTransactionUseCase;
 import com.prostamol.Prostamol.infrastructure.web.dto.request.RecordTransactionRequest;
 import com.prostamol.Prostamol.infrastructure.web.dto.request.RecordTransferRequest;
+import com.prostamol.Prostamol.infrastructure.web.dto.request.UpdateTransactionRequest;
 import com.prostamol.Prostamol.infrastructure.web.dto.response.TransactionResponse;
 import com.prostamol.Prostamol.infrastructure.web.mapper.TransactionWebMapper;
 import jakarta.validation.Valid;
@@ -26,17 +29,23 @@ public class TransactionController {
     private final RecordTransactionUseCase recordTransaction;
     private final RecordTransferUseCase recordTransfer;
     private final GetTransactionsUseCase getTransactions;
+    private final UpdateTransactionUseCase updateTransaction;
+    private final DeleteTransactionUseCase deleteTransaction;
     private final TransactionWebMapper mapper;
 
     public TransactionController(
         RecordTransactionUseCase recordTransaction,
         RecordTransferUseCase recordTransfer,
         GetTransactionsUseCase getTransactions,
+        UpdateTransactionUseCase updateTransaction,
+        DeleteTransactionUseCase deleteTransaction,
         TransactionWebMapper mapper
     ) {
         this.recordTransaction = recordTransaction;
         this.recordTransfer = recordTransfer;
         this.getTransactions = getTransactions;
+        this.updateTransaction = updateTransaction;
+        this.deleteTransaction = deleteTransaction;
         this.mapper = mapper;
     }
 
@@ -100,6 +109,26 @@ public class TransactionController {
             .collect(Collectors.toList());
     }
 
+    @PatchMapping("/transactions/{transactionId}")
+    public TransactionResponse patch(
+        @AuthenticationPrincipal UUID userId,
+        @PathVariable UUID transactionId,
+        @Valid @RequestBody UpdateTransactionRequest request
+    ) {
+        return mapper.toResponse(updateTransaction.execute(toUpdateCommand(userId, transactionId, request)));
+    }
+
+    @DeleteMapping("/transactions/{transactionId}")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void delete(
+        @AuthenticationPrincipal UUID userId,
+        @PathVariable UUID transactionId
+    ) {
+        DeleteTransactionUseCase.Command deleteTransactionCommand = new DeleteTransactionUseCase.Command(userId, transactionId);
+
+        deleteTransaction.execute(deleteTransactionCommand);
+    }
+
     @GetMapping("/accounts/{accountId}/transactions")
     public List<TransactionResponse> byAccount(
         @PathVariable UUID accountId,
@@ -139,5 +168,41 @@ public class TransactionController {
             .stream()
             .map(mapper::toResponse)
             .collect(Collectors.toList());
+    }
+
+    @PatchMapping("/users/{userId}/transactions/{transactionId}")
+    public TransactionResponse patchByAdmin(
+        @PathVariable UUID userId,
+        @PathVariable UUID transactionId,
+        @Valid @RequestBody UpdateTransactionRequest request
+    ) {
+        return mapper.toResponse(updateTransaction.execute(toUpdateCommand(userId, transactionId, request)));
+    }
+
+    @DeleteMapping("/users/{userId}/transactions/{transactionId}")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void deleteByAdmin(
+        @PathVariable UUID userId,
+        @PathVariable UUID transactionId
+    ) {
+        deleteTransaction.execute(new DeleteTransactionUseCase.Command(userId, transactionId));
+    }
+
+    private UpdateTransactionUseCase.Command toUpdateCommand(
+        UUID userId,
+        UUID transactionId,
+        UpdateTransactionRequest request
+    ) {
+        return new UpdateTransactionUseCase.Command(
+            userId,
+            transactionId,
+            request.amount(),
+            request.currency(),
+            request.date(),
+            request.description(),
+            request.categoryId(),
+            request.recurring(),
+            request.recurrenceFrequency()
+        );
     }
 }
