@@ -30,8 +30,8 @@ public class GlobalExceptionHandler {
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     public ErrorResponse handleValidation(MethodArgumentNotValidException ex) {
         String message = ex.getBindingResult().getFieldErrors().stream()
-                .map(FieldError::getDefaultMessage)
-                .collect(Collectors.joining(", "));
+            .map(FieldError::getDefaultMessage)
+            .collect(Collectors.joining(", "));
         return ErrorResponse.of(HttpStatus.BAD_REQUEST.value(), "Validation Failed", message);
     }
 

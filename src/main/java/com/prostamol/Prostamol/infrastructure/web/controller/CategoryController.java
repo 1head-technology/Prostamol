@@ -44,7 +44,9 @@ public class CategoryController {
 
     @GetMapping("/categories")
     public List<CategoryResponse> list(@AuthenticationPrincipal UUID userId) {
-        return getCategories.execute(userId).stream().map(this::toResponse).collect(Collectors.toList());
+        return getCategories.execute(userId).stream()
+            .map(this::toResponse)
+            .collect(Collectors.toList());
     }
 
     // ── Admin endpoints ──────────────────────────────────────────────────────
@@ -62,7 +64,9 @@ public class CategoryController {
 
     @GetMapping("/users/{userId}/categories")
     public List<CategoryResponse> listByAdmin(@PathVariable UUID userId) {
-        return getCategories.execute(userId).stream().map(this::toResponse).collect(Collectors.toList());
+        return getCategories.execute(userId).stream()
+            .map(this::toResponse)
+            .collect(Collectors.toList());
     }
 
     private CategoryResponse toResponse(Category c) {

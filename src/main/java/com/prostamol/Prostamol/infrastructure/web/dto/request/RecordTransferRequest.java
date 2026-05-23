@@ -9,7 +9,6 @@ import java.time.LocalDate;
 import java.util.UUID;
 
 public record RecordTransferRequest(
-    @NotNull UUID userId,
     @NotNull UUID sourceAccountId,
     @NotNull UUID destinationAccountId,
     @NotNull @Positive BigDecimal amount,

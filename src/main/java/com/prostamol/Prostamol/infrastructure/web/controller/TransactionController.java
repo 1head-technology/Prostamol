@@ -67,14 +67,26 @@ public class TransactionController {
         @AuthenticationPrincipal UUID userId,
         @Valid @RequestBody RecordTransferRequest request
     ) {
-        return recordTransfer.execute(new RecordTransferUseCase.Command(
+        RecordTransferUseCase.Command recordTransferCommand = new RecordTransferUseCase.Command(
             userId,
             request.sourceAccountId(),
             request.destinationAccountId(),
             Money.of(request.amount(), request.currency()),
             request.date(),
             request.description()
-        ))
+        );
+
+        System.out.println(
+            userId.toString()
+            + request.sourceAccountId()
+            + request.destinationAccountId()
+            + request.amount()
+            + request.currency()
+            + request.date()
+            + request.description()
+        );
+
+        return recordTransfer.execute(recordTransferCommand)
             .stream()
             .map(mapper::toResponse)
             .collect(Collectors.toList());

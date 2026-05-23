@@ -1,12 +1,8 @@
 package com.prostamol.Prostamol.infrastructure.config;
 
+import com.prostamol.Prostamol.application.usecase.account.*;
 import com.prostamol.Prostamol.application.usecase.auth.AdminLoginService;
 import com.prostamol.Prostamol.application.usecase.auth.LoginService;
-import com.prostamol.Prostamol.application.usecase.account.CreateAccountService;
-import com.prostamol.Prostamol.application.usecase.account.GetAccountBalanceService;
-import com.prostamol.Prostamol.application.usecase.account.GetAccountService;
-import com.prostamol.Prostamol.application.usecase.account.GetAccountsService;
-import com.prostamol.Prostamol.application.usecase.account.UpdateAccountService;
 import com.prostamol.Prostamol.application.usecase.auth.SignupService;
 import com.prostamol.Prostamol.application.usecase.budget.CreateBudgetService;
 import com.prostamol.Prostamol.application.usecase.budget.GetBudgetSummaryService;
@@ -21,13 +17,9 @@ import com.prostamol.Prostamol.application.usecase.transaction.RecordTransaction
 import com.prostamol.Prostamol.application.usecase.transaction.RecordTransferService;
 import com.prostamol.Prostamol.application.usecase.user.CreateUserService;
 import com.prostamol.Prostamol.application.usecase.user.GetUserService;
+import com.prostamol.Prostamol.domain.port.in.account.*;
 import com.prostamol.Prostamol.domain.port.in.auth.AdminLoginUseCase;
 import com.prostamol.Prostamol.domain.port.in.auth.LoginUseCase;
-import com.prostamol.Prostamol.domain.port.in.account.CreateAccountUseCase;
-import com.prostamol.Prostamol.domain.port.in.account.GetAccountBalanceUseCase;
-import com.prostamol.Prostamol.domain.port.in.account.GetAccountUseCase;
-import com.prostamol.Prostamol.domain.port.in.account.GetAccountsUseCase;
-import com.prostamol.Prostamol.domain.port.in.account.UpdateAccountUseCase;
 import com.prostamol.Prostamol.domain.port.in.auth.SignupUseCase;
 import com.prostamol.Prostamol.domain.port.in.budget.CreateBudgetUseCase;
 import com.prostamol.Prostamol.domain.port.in.budget.GetBudgetSummaryUseCase;
@@ -116,6 +108,11 @@ public class BeanConfig {
         TransactionRepositoryPort transactionRepository
     ) {
         return new GetAccountBalanceService(accountRepository, transactionRepository);
+    }
+
+    @Bean
+    public DeleteAccountUseCase deleteAccountUseCase(AccountRepositoryPort accountRepository) {
+        return new DeleteAccountService(accountRepository);
     }
 
     // ── Transaction ───────────────────────────────────────────────────────────

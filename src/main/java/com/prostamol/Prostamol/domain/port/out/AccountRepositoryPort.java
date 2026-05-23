@@ -10,4 +10,5 @@ public interface AccountRepositoryPort {
     Account save(Account account);
     Optional<Account> findById(UUID id);
     List<Account> findAllByUserId(UUID userId);
+    void delete(UUID accountId);
 }
