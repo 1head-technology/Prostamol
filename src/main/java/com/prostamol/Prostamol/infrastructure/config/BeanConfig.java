@@ -13,6 +13,7 @@ import com.prostamol.Prostamol.application.usecase.savings.AddSavingsContributio
 import com.prostamol.Prostamol.application.usecase.savings.CreateSavingsGoalService;
 import com.prostamol.Prostamol.application.usecase.savings.GetSavingsGoalsService;
 import com.prostamol.Prostamol.application.usecase.transaction.DeleteTransactionService;
+import com.prostamol.Prostamol.application.usecase.account.GetAccountTransactionsService;
 import com.prostamol.Prostamol.application.usecase.transaction.GetTransactionsService;
 import com.prostamol.Prostamol.application.usecase.transaction.RecordTransactionService;
 import com.prostamol.Prostamol.application.usecase.transaction.RecordTransferService;
@@ -32,6 +33,7 @@ import com.prostamol.Prostamol.domain.port.in.savings.AddSavingsContributionUseC
 import com.prostamol.Prostamol.domain.port.in.savings.CreateSavingsGoalUseCase;
 import com.prostamol.Prostamol.domain.port.in.savings.GetSavingsGoalsUseCase;
 import com.prostamol.Prostamol.domain.port.in.transaction.DeleteTransactionUseCase;
+import com.prostamol.Prostamol.domain.port.in.transaction.GetAccountTransactionsUseCase;
 import com.prostamol.Prostamol.domain.port.in.transaction.GetTransactionsUseCase;
 import com.prostamol.Prostamol.domain.port.in.transaction.RecordTransactionUseCase;
 import com.prostamol.Prostamol.domain.port.in.transaction.RecordTransferUseCase;
@@ -115,8 +117,8 @@ public class BeanConfig {
     }
 
     @Bean
-    public DeleteAccountUseCase deleteAccountUseCase(AccountRepositoryPort accountRepository) {
-        return new DeleteAccountService(accountRepository);
+    public DeleteAccountUseCase deleteAccountUseCase(AccountRepositoryPort accountRepository, TransactionRepositoryPort transactionRepository) {
+        return new DeleteAccountService(accountRepository, transactionRepository);
     }
 
     // ── Transaction ───────────────────────────────────────────────────────────
@@ -141,6 +143,11 @@ public class BeanConfig {
     @Bean
     public GetTransactionsUseCase getTransactionsUseCase(TransactionRepositoryPort transactionRepository) {
         return new GetTransactionsService(transactionRepository);
+    }
+
+    @Bean
+    public GetAccountTransactionsUseCase getAccountTransactionsUseCase(TransactionRepositoryPort transactionRepository) {
+        return new GetAccountTransactionsService(transactionRepository);
     }
 
     @Bean

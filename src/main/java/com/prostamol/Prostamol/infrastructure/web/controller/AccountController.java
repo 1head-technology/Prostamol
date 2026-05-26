@@ -96,7 +96,8 @@ public class AccountController {
             throw new AccessDeniedException("Account does not belong to the authenticated user");
         }
 
-        deleteAccount.execute(accountId);
+        DeleteAccountUseCase.Command deleteAccountCommand = new DeleteAccountUseCase.Command(userId, accountId);
+        deleteAccount.execute(deleteAccountCommand);
     }
 
     // ── Admin endpoints ──────────────────────────────────────────────────────

@@ -143,7 +143,7 @@ public class TransactionController {
 
     // ── Admin endpoints ──────────────────────────────────────────────────────
 
-    @PostMapping("/users/{userId}/transactions")
+    @PostMapping("/admin/users/{userId}/transactions")
     @ResponseStatus(HttpStatus.CREATED)
     public TransactionResponse recordByAdmin(
         @PathVariable UUID userId,
@@ -162,7 +162,7 @@ public class TransactionController {
         )));
     }
 
-    @GetMapping("/users/{userId}/transactions")
+    @GetMapping("/admin/users/{userId}/transactions")
     public List<TransactionResponse> listByAdmin(@PathVariable UUID userId) {
         return getTransactions.execute(userId)
             .stream()
@@ -170,7 +170,7 @@ public class TransactionController {
             .collect(Collectors.toList());
     }
 
-    @PatchMapping("/users/{userId}/transactions/{transactionId}")
+    @PatchMapping("/admin/users/{userId}/transactions/{transactionId}")
     public TransactionResponse patchByAdmin(
         @PathVariable UUID userId,
         @PathVariable UUID transactionId,
@@ -179,7 +179,7 @@ public class TransactionController {
         return mapper.toResponse(updateTransaction.execute(toUpdateCommand(userId, transactionId, request)));
     }
 
-    @DeleteMapping("/users/{userId}/transactions/{transactionId}")
+    @DeleteMapping("/admin/users/{userId}/transactions/{transactionId}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void deleteByAdmin(
         @PathVariable UUID userId,

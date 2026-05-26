@@ -41,7 +41,7 @@ public class AccountRepositoryAdapter implements AccountRepositoryPort {
     }
 
     @Override
-    public void delete(UUID accountId) {
+    public void deleteById(UUID accountId) {
         jpaRepository.deleteById(accountId);
     }
 }
