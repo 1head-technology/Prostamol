@@ -4,9 +4,13 @@ import com.prostamol.Prostamol.application.usecase.account.*;
 import com.prostamol.Prostamol.application.usecase.auth.AdminLoginService;
 import com.prostamol.Prostamol.application.usecase.auth.LoginService;
 import com.prostamol.Prostamol.application.usecase.auth.SignupService;
+import com.prostamol.Prostamol.application.usecase.budget.AddBudgetLineService;
 import com.prostamol.Prostamol.application.usecase.budget.CreateBudgetService;
+import com.prostamol.Prostamol.application.usecase.budget.GetBudgetService;
+import com.prostamol.Prostamol.application.usecase.budget.UpdateBudgetLineService;
 import com.prostamol.Prostamol.application.usecase.budget.GetBudgetSummaryService;
 import com.prostamol.Prostamol.application.usecase.budget.GetBudgetsService;
+import com.prostamol.Prostamol.application.usecase.budget.UpdateBudgetService;
 import com.prostamol.Prostamol.application.usecase.category.CreateCategoryService;
 import com.prostamol.Prostamol.application.usecase.category.GetCategoriesService;
 import com.prostamol.Prostamol.application.usecase.savings.AddSavingsContributionService;
@@ -24,9 +28,13 @@ import com.prostamol.Prostamol.domain.port.in.account.*;
 import com.prostamol.Prostamol.domain.port.in.auth.AdminLoginUseCase;
 import com.prostamol.Prostamol.domain.port.in.auth.LoginUseCase;
 import com.prostamol.Prostamol.domain.port.in.auth.SignupUseCase;
+import com.prostamol.Prostamol.domain.port.in.budget.AddBudgetLineUseCase;
 import com.prostamol.Prostamol.domain.port.in.budget.CreateBudgetUseCase;
+import com.prostamol.Prostamol.domain.port.in.budget.GetBudgetUseCase;
+import com.prostamol.Prostamol.domain.port.in.budget.UpdateBudgetLineUseCase;
 import com.prostamol.Prostamol.domain.port.in.budget.GetBudgetSummaryUseCase;
 import com.prostamol.Prostamol.domain.port.in.budget.GetBudgetsUseCase;
+import com.prostamol.Prostamol.domain.port.in.budget.UpdateBudgetUseCase;
 import com.prostamol.Prostamol.domain.port.in.category.CreateCategoryUseCase;
 import com.prostamol.Prostamol.domain.port.in.category.GetCategoriesUseCase;
 import com.prostamol.Prostamol.domain.port.in.savings.AddSavingsContributionUseCase;
@@ -178,13 +186,42 @@ public class BeanConfig {
     // ── Budget ────────────────────────────────────────────────────────────────
 
     @Bean
-    public CreateBudgetUseCase createBudgetUseCase(BudgetRepositoryPort budgetRepository) {
-        return new CreateBudgetService(budgetRepository);
+    public CreateBudgetUseCase createBudgetUseCase(
+        BudgetRepositoryPort budgetRepository,
+        CategoryRepositoryPort categoryRepository
+    ) {
+        return new CreateBudgetService(budgetRepository, categoryRepository);
     }
 
     @Bean
     public GetBudgetsUseCase getBudgetsUseCase(BudgetRepositoryPort budgetRepository) {
         return new GetBudgetsService(budgetRepository);
+    }
+
+    @Bean
+    public GetBudgetUseCase getBudgetUseCase(BudgetRepositoryPort budgetRepository) {
+        return new GetBudgetService(budgetRepository);
+    }
+
+    @Bean
+    public UpdateBudgetUseCase updateBudgetUseCase(BudgetRepositoryPort budgetRepository) {
+        return new UpdateBudgetService(budgetRepository);
+    }
+
+    @Bean
+    public AddBudgetLineUseCase addBudgetLineUseCase(
+        BudgetRepositoryPort budgetRepository,
+        CategoryRepositoryPort categoryRepository
+    ) {
+        return new AddBudgetLineService(budgetRepository, categoryRepository);
+    }
+
+    @Bean
+    public UpdateBudgetLineUseCase updateBudgetLineUseCase(
+        BudgetRepositoryPort budgetRepository,
+        CategoryRepositoryPort categoryRepository
+    ) {
+        return new UpdateBudgetLineService(budgetRepository, categoryRepository);
     }
 
     @Bean

@@ -1,6 +1,7 @@
 package com.prostamol.Prostamol.domain.model.budget;
 
 import com.prostamol.Prostamol.domain.model.shared.DateRange;
+import com.prostamol.Prostamol.domain.model.shared.Money;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -32,8 +33,22 @@ public class Budget {
         this.lines = new ArrayList<>(lines);
     }
 
+    public Budget update(String name, DateRange period, BudgetStatus status) {
+        return new Budget(id, userId, name, period, status, lines);
+    }
+
     public void addLine(BudgetLine line) {
         lines.add(line);
+    }
+
+    public void updateLine(UUID lineId, UUID categoryId, Money plannedAmount) {
+        for (int i = 0; i < lines.size(); i++) {
+            if (lines.get(i).getId().equals(lineId)) {
+                lines.set(i, new BudgetLine(lineId, categoryId, plannedAmount));
+                return;
+            }
+        }
+        throw new IllegalArgumentException("Budget line not found: " + lineId);
     }
 
     public void close() {
