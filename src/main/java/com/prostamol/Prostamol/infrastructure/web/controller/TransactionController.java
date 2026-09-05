@@ -14,6 +14,7 @@ import com.prostamol.Prostamol.infrastructure.web.mapper.TransactionWebMapper;
 import jakarta.validation.Valid;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
@@ -143,6 +144,7 @@ public class TransactionController {
 
     // ── Admin endpoints ──────────────────────────────────────────────────────
 
+    @PreAuthorize("hasRole('ADMIN')")
     @PostMapping("/admin/users/{userId}/transactions")
     @ResponseStatus(HttpStatus.CREATED)
     public TransactionResponse recordByAdmin(
@@ -162,6 +164,7 @@ public class TransactionController {
         )));
     }
 
+    @PreAuthorize("hasRole('ADMIN')")
     @GetMapping("/admin/users/{userId}/transactions")
     public List<TransactionResponse> listByAdmin(@PathVariable UUID userId) {
         return getTransactions.execute(userId)
@@ -170,6 +173,7 @@ public class TransactionController {
             .collect(Collectors.toList());
     }
 
+    @PreAuthorize("hasRole('ADMIN')")
     @PatchMapping("/admin/users/{userId}/transactions/{transactionId}")
     public TransactionResponse patchByAdmin(
         @PathVariable UUID userId,
@@ -179,6 +183,7 @@ public class TransactionController {
         return mapper.toResponse(updateTransaction.execute(toUpdateCommand(userId, transactionId, request)));
     }
 
+    @PreAuthorize("hasRole('ADMIN')")
     @DeleteMapping("/admin/users/{userId}/transactions/{transactionId}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void deleteByAdmin(

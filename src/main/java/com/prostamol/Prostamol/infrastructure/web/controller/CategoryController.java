@@ -7,6 +7,7 @@ import com.prostamol.Prostamol.infrastructure.web.dto.request.CreateCategoryRequ
 import com.prostamol.Prostamol.infrastructure.web.dto.response.CategoryResponse;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
@@ -51,7 +52,8 @@ public class CategoryController {
 
     // ── Admin endpoints ──────────────────────────────────────────────────────
 
-    @PostMapping("/users/{userId}/categories")
+    @PreAuthorize("hasRole('ADMIN')")
+    @PostMapping("/admin/users/{userId}/categories")
     @ResponseStatus(HttpStatus.CREATED)
     public CategoryResponse createByAdmin(
         @PathVariable UUID userId,
@@ -62,7 +64,8 @@ public class CategoryController {
         ));
     }
 
-    @GetMapping("/users/{userId}/categories")
+    @PreAuthorize("hasRole('ADMIN')")
+    @GetMapping("/admin/users/{userId}/categories")
     public List<CategoryResponse> listByAdmin(@PathVariable UUID userId) {
         return getCategories.execute(userId).stream()
             .map(this::toResponse)

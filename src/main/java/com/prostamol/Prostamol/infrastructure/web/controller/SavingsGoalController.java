@@ -10,6 +10,7 @@ import com.prostamol.Prostamol.infrastructure.web.dto.response.SavingsGoalRespon
 import com.prostamol.Prostamol.infrastructure.web.mapper.SavingsGoalWebMapper;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
@@ -72,7 +73,8 @@ public class SavingsGoalController {
 
     // ── Admin endpoints ──────────────────────────────────────────────────────
 
-    @PostMapping("/users/{userId}/savings-goals")
+    @PreAuthorize("hasRole('ADMIN')")
+    @PostMapping("/admin/users/{userId}/savings-goals")
     @ResponseStatus(HttpStatus.CREATED)
     public SavingsGoalResponse createByAdmin(
         @PathVariable UUID userId,
@@ -85,7 +87,8 @@ public class SavingsGoalController {
         )));
     }
 
-    @GetMapping("/users/{userId}/savings-goals")
+    @PreAuthorize("hasRole('ADMIN')")
+    @GetMapping("/admin/users/{userId}/savings-goals")
     public List<SavingsGoalResponse> listByAdmin(@PathVariable UUID userId) {
         return getGoals.execute(userId).stream()
             .map(mapper::toResponse)

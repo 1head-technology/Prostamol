@@ -33,7 +33,15 @@ public class UserController {
 
     // ── Authenticated user endpoints ─────────────────────────────────────────
 
-    @PostMapping("/users")
+    @GetMapping("/users/me")
+    public UserResponse me(@AuthenticationPrincipal UUID userId) {
+        return mapper.toResponse(getUserUseCase.execute(userId));
+    }
+
+    // ── Admin endpoints ──────────────────────────────────────────────────────
+
+    @PreAuthorize("hasRole('ADMIN')")
+    @PostMapping("/admin/users")
     @ResponseStatus(HttpStatus.CREATED)
     public UserResponse createByAdmin(@Valid @RequestBody CreateUserRequest request) {
         CreateUserUseCase.Command createUserCommand = new CreateUserUseCase.Command(
@@ -45,13 +53,6 @@ public class UserController {
 
         return mapper.toResponse(createUserUseCase.execute(createUserCommand));
     }
-
-    @GetMapping("/users/me")
-    public UserResponse me(@AuthenticationPrincipal UUID userId) {
-        return mapper.toResponse(getUserUseCase.execute(userId));
-    }
-
-    // ── Admin endpoints ──────────────────────────────────────────────────────
 
     @PreAuthorize("hasRole('ADMIN')")
     @GetMapping("/admin/users/{userId}")
