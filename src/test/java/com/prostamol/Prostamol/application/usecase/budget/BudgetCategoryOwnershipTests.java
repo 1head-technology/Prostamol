@@ -75,9 +75,9 @@ class BudgetCategoryOwnershipTests {
                 new CreateBudgetUseCase.Command(userId, "Budget", budget.getPeriod(),
                     List.of(new CreateBudgetUseCase.LineCommand(categoryId, amount))));
             case ADD -> new AddBudgetLineService(budgets, categories).execute(
-                new AddBudgetLineUseCase.Command(budget.getId(), categoryId, amount));
+                new AddBudgetLineUseCase.Command(userId, budget.getId(), categoryId, amount));
             case UPDATE -> new UpdateBudgetLineService(budgets, categories).execute(
-                new UpdateBudgetLineUseCase.Command(budget.getId(), line.getId(), categoryId, null, null));
+                new UpdateBudgetLineUseCase.Command(userId, budget.getId(), line.getId(), categoryId, null, null));
         };
     }
 

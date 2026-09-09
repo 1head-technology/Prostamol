@@ -10,8 +10,8 @@ import com.prostamol.Prostamol.domain.port.in.budget.GetBudgetSummaryUseCase;
 import com.prostamol.Prostamol.domain.port.out.BudgetRepositoryPort;
 import com.prostamol.Prostamol.domain.port.out.CategoryRepositoryPort;
 import com.prostamol.Prostamol.domain.port.out.TransactionRepositoryPort;
+import org.springframework.security.access.AccessDeniedException;
 
-import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
@@ -33,14 +33,19 @@ public class GetBudgetSummaryService implements GetBudgetSummaryUseCase {
     }
 
     @Override
-    public BudgetSummary execute(UUID budgetId) {
+    public BudgetSummary execute(UUID userId, UUID budgetId) {
         Budget budget = budgetRepository.findById(budgetId)
             .orElseThrow(() -> new IllegalArgumentException("Budget not found: " + budgetId));
+
+        if (!budget.getUserId().equals(userId)) {
+            throw new AccessDeniedException("Budget does not belong to the authenticated user");
+        }
 
         List<LineSummary> lines = new ArrayList<>();
 
         for (BudgetLine line : budget.getLines()) {
             Category category = categoryRepository.findById(line.getCategoryId())
+                .filter(found -> found.isSystem() || budget.getUserId().equals(found.getUserId()))
                 .orElseThrow(() -> new IllegalArgumentException("Category not found: " + line.getCategoryId()));
 
             List<Transaction> transactions = transactionRepository.findAllByUserIdAndCategoryIdAndDateBetween(
@@ -51,12 +56,12 @@ public class GetBudgetSummaryService implements GetBudgetSummaryUseCase {
             );
 
             String currency = line.getPlannedAmount().currency();
-            BigDecimal spent = transactions.stream()
-                .filter(t -> t.getType() == TransactionType.EXPENSE)
-                .map(t -> t.getAmount().amount())
-                .reduce(BigDecimal.ZERO, BigDecimal::add);
-
-            Money spentMoney = Money.of(spent, currency);
+            Money spentMoney = Money.zero(currency);
+            for (Transaction transaction : transactions) {
+                if (transaction.getType() == TransactionType.EXPENSE) {
+                    spentMoney = spentMoney.add(transaction.getAmount());
+                }
+            }
             Money remaining = line.getPlannedAmount().subtract(spentMoney);
             lines.add(new LineSummary(
                 line.getCategoryId(),

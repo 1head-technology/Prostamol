@@ -6,6 +6,7 @@ import com.prostamol.Prostamol.domain.port.in.account.DeleteAccountUseCase;
 import com.prostamol.Prostamol.domain.port.in.transaction.DeleteTransactionUseCase;
 import com.prostamol.Prostamol.domain.port.out.AccountRepositoryPort;
 import com.prostamol.Prostamol.domain.port.out.TransactionRepositoryPort;
+import org.springframework.security.access.AccessDeniedException;
 
 import java.util.List;
 import java.util.UUID;
@@ -27,7 +28,7 @@ public class DeleteAccountService implements DeleteAccountUseCase {
             .orElseThrow(() -> new IllegalArgumentException("Account not found: " + command.accountId()));
 
         if (!account.getUserId().equals(command.userId())) {
-            throw new IllegalArgumentException("Transaction does not belong to user: " + command.userId());
+            throw new AccessDeniedException("Account does not belong to the authenticated user");
         }
 
         List<Transaction> transactions = transactionRepository.findAllByAccountId(command.accountId());

@@ -38,7 +38,7 @@ public class Transaction {
         this.userId = userId;
         this.accountId = accountId;
         this.type = type;
-        this.amount = amount;
+        this.amount = amount.requirePositive("transaction amount");
         this.date = date;
         this.description = description;
         this.categoryId = categoryId;

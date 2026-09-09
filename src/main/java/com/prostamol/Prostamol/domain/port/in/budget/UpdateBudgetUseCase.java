@@ -10,6 +10,7 @@ public interface UpdateBudgetUseCase {
     Budget execute(Command command);
 
     record Command(
+        UUID userId,
         UUID budgetId,
         String name,
         LocalDate from,

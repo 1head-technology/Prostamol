@@ -112,8 +112,11 @@ public class BeanConfig {
     }
 
     @Bean
-    public UpdateAccountUseCase updateAccountUseCase(AccountRepositoryPort accountRepository) {
-        return new UpdateAccountService(accountRepository);
+    public UpdateAccountUseCase updateAccountUseCase(
+        AccountRepositoryPort accountRepository,
+        TransactionRepositoryPort transactionRepository
+    ) {
+        return new UpdateAccountService(accountRepository, transactionRepository);
     }
 
     @Bean
@@ -149,21 +152,28 @@ public class BeanConfig {
     }
 
     @Bean
-    public GetTransactionsUseCase getTransactionsUseCase(TransactionRepositoryPort transactionRepository) {
-        return new GetTransactionsService(transactionRepository);
+    public GetTransactionsUseCase getTransactionsUseCase(
+        TransactionRepositoryPort transactionRepository,
+        AccountRepositoryPort accountRepository
+    ) {
+        return new GetTransactionsService(transactionRepository, accountRepository);
     }
 
     @Bean
-    public GetAccountTransactionsUseCase getAccountTransactionsUseCase(TransactionRepositoryPort transactionRepository) {
-        return new GetAccountTransactionsService(transactionRepository);
+    public GetAccountTransactionsUseCase getAccountTransactionsUseCase(
+        TransactionRepositoryPort transactionRepository,
+        AccountRepositoryPort accountRepository
+    ) {
+        return new GetAccountTransactionsService(transactionRepository, accountRepository);
     }
 
     @Bean
     public UpdateTransactionUseCase updateTransactionUseCase(
         TransactionRepositoryPort transactionRepository,
-        CategoryRepositoryPort categoryRepository
+        CategoryRepositoryPort categoryRepository,
+        AccountRepositoryPort accountRepository
     ) {
-        return new UpdateTransactionService(transactionRepository, categoryRepository);
+        return new UpdateTransactionService(transactionRepository, categoryRepository, accountRepository);
     }
 
     @Bean

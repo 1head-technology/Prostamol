@@ -63,11 +63,12 @@ public class SavingsGoalController {
 
     @PostMapping("/savings-goals/{goalId}/contributions")
     public SavingsGoalResponse contribute(
+        @AuthenticationPrincipal UUID userId,
         @PathVariable UUID goalId,
         @Valid @RequestBody AddContributionRequest request
     ) {
         return mapper.toResponse(addContribution.execute(
-            goalId, Money.of(request.amount(), request.currency())
+            userId, goalId, Money.of(request.amount(), request.currency())
         ));
     }
 

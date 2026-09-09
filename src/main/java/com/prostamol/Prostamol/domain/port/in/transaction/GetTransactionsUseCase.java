@@ -7,6 +7,6 @@ import java.util.List;
 import java.util.UUID;
 
 public interface GetTransactionsUseCase {
-    List<Transaction> execute(UUID accountId, LocalDate from, LocalDate to);
+    List<Transaction> execute(UUID userId, UUID accountId, LocalDate from, LocalDate to);
     List<Transaction> execute(UUID userId);
 }

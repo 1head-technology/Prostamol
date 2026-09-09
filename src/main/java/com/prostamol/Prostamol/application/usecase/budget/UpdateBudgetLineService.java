@@ -6,6 +6,7 @@ import com.prostamol.Prostamol.domain.model.shared.Money;
 import com.prostamol.Prostamol.domain.port.in.budget.UpdateBudgetLineUseCase;
 import com.prostamol.Prostamol.domain.port.out.BudgetRepositoryPort;
 import com.prostamol.Prostamol.domain.port.out.CategoryRepositoryPort;
+import org.springframework.security.access.AccessDeniedException;
 
 import java.util.UUID;
 
@@ -27,6 +28,10 @@ public class UpdateBudgetLineService implements UpdateBudgetLineUseCase {
         Budget budget = budgetRepository
             .findById(command.budgetId())
             .orElseThrow(() -> new IllegalArgumentException("Budget not found: " + command.budgetId()));
+
+        if (!budget.getUserId().equals(command.userId())) {
+            throw new AccessDeniedException("Budget does not belong to the authenticated user");
+        }
 
         BudgetLine current = budget.getLines().stream()
             .filter(line -> line.getId().equals(command.lineId()))

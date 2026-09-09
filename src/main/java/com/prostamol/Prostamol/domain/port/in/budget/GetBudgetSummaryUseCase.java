@@ -6,7 +6,7 @@ import java.util.List;
 import java.util.UUID;
 
 public interface GetBudgetSummaryUseCase {
-    BudgetSummary execute(UUID budgetId);
+    BudgetSummary execute(UUID userId, UUID budgetId);
 
     record BudgetSummary(UUID budgetId, String budgetName, List<LineSummary> lines) {}
 

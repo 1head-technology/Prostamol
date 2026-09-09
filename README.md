@@ -277,3 +277,39 @@ infrastructure/
 - The **domain** layer has zero dependencies on Spring or JPA.
 - Application services are plain Java classes with no `@Service` annotation -- they are instantiated as beans in `BeanConfig`.
 - Infrastructure adapters implement the output ports, keeping the domain decoupled from persistence details.
+
+## Passkeys
+
+The API supports passkey enrollment, passwordless JWT sign-in, and per-user passkey
+management. See [configuration, endpoints, and frontend integration](docs/passkeys.md).
+
+## Production deployment
+
+Prostamol is packaged as a Docker image and listens on port 8080. The production
+Compose file publishes that port for Fear's `/api/v1` reverse proxy and expects
+the database and application configuration in the deployment directory's `.env`
+file.
+
+Build and run it locally with Docker Compose:
+
+```bash
+./mvnw clean package
+docker compose -f docker-compose.production.yml up -d --build
+```
+
+The GitHub Actions workflow in `.github/workflows/deploy.yml` runs the tests,
+packages the application, uploads it to the VPS, and rebuilds it whenever `main`
+receives a push. Configure these repository secrets before the first deployment:
+
+- `DEPLOY_HOST`: VPS hostname or IP address.
+- `DEPLOY_USER`: SSH user with permission to run Docker.
+- `DEPLOY_SSH_KEY`: private Ed25519 key whose public key is in the user's `~/.ssh/authorized_keys`.
+- `DEPLOY_KNOWN_HOSTS`: pinned host key line for the VPS.
+- `DEPLOY_PATH`: absolute directory for Prostamol on the VPS, such as `/opt/naru/prostamol`.
+
+The VPS must have Docker Engine, the Docker Compose plugin, and PostgreSQL
+available. Set `DB_HOST` (use `host.docker.internal` when PostgreSQL runs on the
+VPS host), `DB_PORT`, `DB_NAME`, `DB_USERNAME`, `DB_PASSWORD`,
+`JWT_SECRET`, and the passkey settings in the deployment directory's `.env` file.
+Fear should run alongside it with its API proxy targeting
+`host.docker.internal:8080`.

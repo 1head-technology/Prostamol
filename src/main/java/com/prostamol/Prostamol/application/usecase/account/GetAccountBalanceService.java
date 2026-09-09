@@ -7,6 +7,7 @@ import com.prostamol.Prostamol.domain.model.transaction.TransactionType;
 import com.prostamol.Prostamol.domain.port.in.account.GetAccountBalanceUseCase;
 import com.prostamol.Prostamol.domain.port.out.AccountRepositoryPort;
 import com.prostamol.Prostamol.domain.port.out.TransactionRepositoryPort;
+import org.springframework.security.access.AccessDeniedException;
 
 import java.math.BigDecimal;
 import java.util.List;
@@ -26,16 +27,21 @@ public class GetAccountBalanceService implements GetAccountBalanceUseCase {
     }
 
     @Override
-    public Money execute(UUID accountId) {
+    public Money execute(UUID userId, UUID accountId) {
         Account account = accountRepository
             .findById(accountId)
             .orElseThrow(() -> new IllegalArgumentException("Account not found: " + accountId));
+
+        if (!account.getUserId().equals(userId)) {
+            throw new AccessDeniedException("Account does not belong to the authenticated user");
+        }
 
         List<Transaction> transactions = transactionRepository.findAllByAccountId(accountId);
         String currency = account.getInitialBalance().currency();
         BigDecimal balance = account.getInitialBalance().amount();
 
         for (Transaction t : transactions) {
+            account.getInitialBalance().assertSameCurrency(t.getAmount());
             if (t.getType() == TransactionType.INCOME || t.getType() == TransactionType.TRANSFER_IN) {
                 balance = balance.add(t.getAmount().amount());
             }

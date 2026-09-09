@@ -14,6 +14,13 @@ import java.util.stream.Collectors;
 @RestControllerAdvice
 public class GlobalExceptionHandler {
 
+    @ExceptionHandler(com.prostamol.Prostamol.infrastructure.security.passkey.PasskeyException.class)
+    @ResponseStatus(HttpStatus.UNAUTHORIZED)
+    public ErrorResponse handlePasskey(com.prostamol.Prostamol.infrastructure.security.passkey.PasskeyException ex) {
+        return ErrorResponse.of(401, "Unauthorized", ex.getMessage());
+    }
+
+
     @ExceptionHandler(IllegalArgumentException.class)
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     public ErrorResponse handleIllegalArgument(IllegalArgumentException ex) {

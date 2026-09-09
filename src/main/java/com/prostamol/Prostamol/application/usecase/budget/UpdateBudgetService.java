@@ -4,6 +4,7 @@ import com.prostamol.Prostamol.domain.model.budget.Budget;
 import com.prostamol.Prostamol.domain.model.shared.DateRange;
 import com.prostamol.Prostamol.domain.port.in.budget.UpdateBudgetUseCase;
 import com.prostamol.Prostamol.domain.port.out.BudgetRepositoryPort;
+import org.springframework.security.access.AccessDeniedException;
 
 public class UpdateBudgetService implements UpdateBudgetUseCase {
 
@@ -18,6 +19,10 @@ public class UpdateBudgetService implements UpdateBudgetUseCase {
         Budget budget = budgetRepository
             .findById(command.budgetId())
             .orElseThrow(() -> new IllegalArgumentException("Budget not found: " + command.budgetId()));
+
+        if (!budget.getUserId().equals(command.userId())) {
+            throw new AccessDeniedException("Budget does not belong to the authenticated user");
+        }
 
         DateRange currentPeriod = budget.getPeriod();
         DateRange updatedPeriod = new DateRange(

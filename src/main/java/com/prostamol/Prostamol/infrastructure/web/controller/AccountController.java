@@ -1,6 +1,5 @@
 package com.prostamol.Prostamol.infrastructure.web.controller;
 
-import com.prostamol.Prostamol.domain.model.account.Account;
 import com.prostamol.Prostamol.domain.model.shared.Money;
 import com.prostamol.Prostamol.domain.port.in.account.*;
 import com.prostamol.Prostamol.infrastructure.web.dto.request.CreateAccountRequest;
@@ -10,7 +9,6 @@ import com.prostamol.Prostamol.infrastructure.web.dto.response.AccountResponse;
 import com.prostamol.Prostamol.infrastructure.web.mapper.AccountWebMapper;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
-import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
@@ -25,7 +23,6 @@ public class AccountController {
 
     private final CreateAccountUseCase createAccount;
     private final GetAccountsUseCase getAccounts;
-    private final GetAccountUseCase getAccount;
     private final GetAccountBalanceUseCase getBalance;
     private final UpdateAccountUseCase updateAccount;
     private final DeleteAccountUseCase deleteAccount;
@@ -34,7 +31,6 @@ public class AccountController {
     public AccountController(
         CreateAccountUseCase createAccount,
         GetAccountsUseCase getAccounts,
-        GetAccountUseCase getAccount,
         GetAccountBalanceUseCase getBalance,
         UpdateAccountUseCase updateAccount,
         DeleteAccountUseCase deleteAccount,
@@ -42,7 +38,6 @@ public class AccountController {
     ) {
         this.createAccount = createAccount;
         this.getAccounts = getAccounts;
-        this.getAccount = getAccount;
         this.getBalance = getBalance;
         this.updateAccount = updateAccount;
         this.deleteAccount = deleteAccount;
@@ -68,8 +63,11 @@ public class AccountController {
     }
 
     @GetMapping("/accounts/{accountId}/balance")
-    public AccountBalanceResponse balance(@PathVariable UUID accountId) {
-        Money balance = getBalance.execute(accountId);
+    public AccountBalanceResponse balance(
+        @AuthenticationPrincipal UUID userId,
+        @PathVariable UUID accountId
+    ) {
+        Money balance = getBalance.execute(userId, accountId);
         return mapper.toBalanceResponse(accountId, balance);
     }
 
@@ -79,23 +77,12 @@ public class AccountController {
         @PathVariable UUID accountId,
         @Valid @RequestBody UpdateAccountRequest request
     ) {
-        Account account = getAccount.execute(accountId);
-        if (!account.getUserId().equals(userId)) {
-            throw new AccessDeniedException("Account does not belong to the authenticated user");
-        }
-
-        return mapper.toResponse(updateAccount.execute(toUpdateCommand(accountId, request)));
+        return mapper.toResponse(updateAccount.execute(toUpdateCommand(userId, accountId, request)));
     }
 
     @DeleteMapping("/accounts/{accountId}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void deleteAccount(@AuthenticationPrincipal UUID userId, @PathVariable UUID accountId) {
-        Account account = getAccount.execute(accountId);
-
-        if (!account.getUserId().equals(userId)) {
-            throw new AccessDeniedException("Account does not belong to the authenticated user");
-        }
-
         DeleteAccountUseCase.Command deleteAccountCommand = new DeleteAccountUseCase.Command(userId, accountId);
         deleteAccount.execute(deleteAccountCommand);
     }
@@ -129,16 +116,16 @@ public class AccountController {
         @PathVariable UUID accountId,
         @Valid @RequestBody UpdateAccountRequest request
     ) {
-        Account account = getAccount.execute(accountId);
-        if (!account.getUserId().equals(userId)) {
-            throw new IllegalArgumentException("Account " + accountId + " does not belong to user " + userId);
-        }
-
-        return mapper.toResponse(updateAccount.execute(toUpdateCommand(accountId, request)));
+        return mapper.toResponse(updateAccount.execute(toUpdateCommand(userId, accountId, request)));
     }
 
-    private UpdateAccountUseCase.Command toUpdateCommand(UUID accountId, UpdateAccountRequest request) {
+    private UpdateAccountUseCase.Command toUpdateCommand(
+        UUID userId,
+        UUID accountId,
+        UpdateAccountRequest request
+    ) {
         return new UpdateAccountUseCase.Command(
+            userId,
             accountId,
             request.name(),
             request.type(),

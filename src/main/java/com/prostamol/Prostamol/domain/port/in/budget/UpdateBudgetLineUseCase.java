@@ -9,6 +9,7 @@ public interface UpdateBudgetLineUseCase {
     Budget execute(Command command);
 
     record Command(
+        UUID userId,
         UUID budgetId,
         UUID lineId,
         UUID categoryId,

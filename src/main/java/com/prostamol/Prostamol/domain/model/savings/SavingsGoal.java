@@ -27,13 +27,15 @@ public class SavingsGoal {
         this.id = id;
         this.userId = userId;
         this.name = name;
-        this.targetAmount = targetAmount;
-        this.currentAmount = currentAmount;
+        this.targetAmount = targetAmount.requirePositive("targetAmount");
+        this.currentAmount = currentAmount.requireNonNegative("currentAmount");
+        this.targetAmount.assertSameCurrency(this.currentAmount);
         this.deadline = deadline;
         this.status = status;
     }
 
     public void addContribution(Money contribution) {
+        contribution.requirePositive("contribution");
         this.currentAmount = this.currentAmount.add(contribution);
 
         if (this.currentAmount.amount().compareTo(this.targetAmount.amount()) >= 0) {

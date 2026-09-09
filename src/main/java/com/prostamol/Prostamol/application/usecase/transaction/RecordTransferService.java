@@ -5,6 +5,7 @@ import com.prostamol.Prostamol.domain.model.transaction.TransactionType;
 import com.prostamol.Prostamol.domain.port.in.transaction.RecordTransferUseCase;
 import com.prostamol.Prostamol.domain.port.out.AccountRepositoryPort;
 import com.prostamol.Prostamol.domain.port.out.TransactionRepositoryPort;
+import org.springframework.security.access.AccessDeniedException;
 
 import java.util.List;
 import java.util.UUID;
@@ -24,13 +25,25 @@ public class RecordTransferService implements RecordTransferUseCase {
 
     @Override
     public List<Transaction> execute(Command command) {
-        accountRepository
+        if (command.sourceAccountId().equals(command.destinationAccountId())) {
+            throw new IllegalArgumentException("Source and destination accounts must be different");
+        }
+
+        var sourceAccount = accountRepository
             .findById(command.sourceAccountId())
             .orElseThrow(() -> new IllegalArgumentException("Source account not found: " + command.sourceAccountId()));
 
-        accountRepository
+        var destinationAccount = accountRepository
             .findById(command.destinationAccountId())
             .orElseThrow(() -> new IllegalArgumentException("Destination account not found: " + command.destinationAccountId()));
+
+        if (!sourceAccount.getUserId().equals(command.userId())
+            || !destinationAccount.getUserId().equals(command.userId())) {
+            throw new AccessDeniedException("Both accounts must belong to the authenticated user");
+        }
+
+        sourceAccount.getInitialBalance().assertSameCurrency(destinationAccount.getInitialBalance());
+        sourceAccount.getInitialBalance().assertSameCurrency(command.amount());
 
         // Generate both IDs upfront so each transaction already references the other
         UUID outId = UUID.randomUUID();

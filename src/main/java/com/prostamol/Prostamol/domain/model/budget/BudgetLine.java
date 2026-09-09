@@ -17,7 +17,7 @@ public class BudgetLine {
     ) {
         this.id = id;
         this.categoryId = categoryId;
-        this.plannedAmount = plannedAmount;
+        this.plannedAmount = plannedAmount.requirePositive("plannedAmount");
     }
 
     public UUID getId() {

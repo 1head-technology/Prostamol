@@ -23,7 +23,7 @@ public class Account {
         this.userId = userId;
         this.name = name;
         this.type = type;
-        this.initialBalance = initialBalance;
+        this.initialBalance = initialBalance.requireNonNegative("initialBalance");
     }
 
     public Account update(String name, AccountType type, Money initialBalance) {

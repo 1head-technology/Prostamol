@@ -6,6 +6,7 @@ import com.prostamol.Prostamol.domain.port.in.transaction.RecordTransactionUseCa
 import com.prostamol.Prostamol.domain.port.out.AccountRepositoryPort;
 import com.prostamol.Prostamol.domain.port.out.CategoryRepositoryPort;
 import com.prostamol.Prostamol.domain.port.out.TransactionRepositoryPort;
+import org.springframework.security.access.AccessDeniedException;
 
 import java.util.UUID;
 
@@ -34,13 +35,23 @@ public class RecordTransactionService implements RecordTransactionUseCase {
             throw new IllegalArgumentException("Use RecordTransferUseCase for transfer transactions");
         }
 
-        accountRepository
+        var account = accountRepository
             .findById(command.accountId())
             .orElseThrow(() -> new IllegalArgumentException("Account not found: " + command.accountId()));
 
-        categoryRepository
+        if (!account.getUserId().equals(command.userId())) {
+            throw new AccessDeniedException("Account does not belong to the authenticated user");
+        }
+
+        account.getInitialBalance().assertSameCurrency(command.amount());
+
+        var category = categoryRepository
             .findById(command.categoryId())
             .orElseThrow(() -> new IllegalArgumentException("Category not found: " + command.categoryId()));
+
+        if (!category.isSystem() && !command.userId().equals(category.getUserId())) {
+            throw new AccessDeniedException("Category does not belong to the authenticated user");
+        }
 
         return transactionRepository.save(new Transaction(
             UUID.randomUUID(),

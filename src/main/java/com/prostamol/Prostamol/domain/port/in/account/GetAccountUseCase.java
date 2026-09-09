@@ -5,5 +5,5 @@ import com.prostamol.Prostamol.domain.model.account.Account;
 import java.util.UUID;
 
 public interface GetAccountUseCase {
-    Account execute(UUID accountId);
+    Account execute(UUID userId, UUID accountId);
 }

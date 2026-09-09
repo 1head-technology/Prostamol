@@ -31,6 +31,7 @@ public class Budget {
         this.period = period;
         this.status = status;
         this.lines = new ArrayList<>(lines);
+        assertCurrencyCoherence(this.lines);
     }
 
     public Budget update(String name, DateRange period, BudgetStatus status) {
@@ -38,13 +39,22 @@ public class Budget {
     }
 
     public void addLine(BudgetLine line) {
+        if (!lines.isEmpty()) {
+            lines.getFirst().getPlannedAmount().assertSameCurrency(line.getPlannedAmount());
+        }
         lines.add(line);
     }
 
     public void updateLine(UUID lineId, UUID categoryId, Money plannedAmount) {
         for (int i = 0; i < lines.size(); i++) {
             if (lines.get(i).getId().equals(lineId)) {
-                lines.set(i, new BudgetLine(lineId, categoryId, plannedAmount));
+                BudgetLine updatedLine = new BudgetLine(lineId, categoryId, plannedAmount);
+                for (BudgetLine line : lines) {
+                    if (!line.getId().equals(lineId)) {
+                        line.getPlannedAmount().assertSameCurrency(updatedLine.getPlannedAmount());
+                    }
+                }
+                lines.set(i, updatedLine);
                 return;
             }
         }
@@ -72,5 +82,13 @@ public class Budget {
     }
     public List<BudgetLine> getLines() {
         return Collections.unmodifiableList(lines);
+    }
+
+    private static void assertCurrencyCoherence(List<BudgetLine> lines) {
+        if (lines.isEmpty()) {
+            return;
+        }
+        Money budgetCurrency = lines.getFirst().getPlannedAmount();
+        lines.forEach(line -> budgetCurrency.assertSameCurrency(line.getPlannedAmount()));
     }
 }

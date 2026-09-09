@@ -86,16 +86,6 @@ public class TransactionController {
             request.description()
         );
 
-        System.out.println(
-            userId.toString()
-            + request.sourceAccountId()
-            + request.destinationAccountId()
-            + request.amount()
-            + request.currency()
-            + request.date()
-            + request.description()
-        );
-
         return recordTransfer.execute(recordTransferCommand)
             .stream()
             .map(mapper::toResponse)
@@ -132,11 +122,12 @@ public class TransactionController {
 
     @GetMapping("/accounts/{accountId}/transactions")
     public List<TransactionResponse> byAccount(
+        @AuthenticationPrincipal UUID userId,
         @PathVariable UUID accountId,
         @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate from,
         @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate to
     ) {
-        return getTransactions.execute(accountId, from, to)
+        return getTransactions.execute(userId, accountId, from, to)
             .stream()
             .map(mapper::toResponse)
             .collect(Collectors.toList());

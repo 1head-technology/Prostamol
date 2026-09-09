@@ -6,5 +6,5 @@ import com.prostamol.Prostamol.domain.model.shared.Money;
 import java.util.UUID;
 
 public interface AddSavingsContributionUseCase {
-    SavingsGoal execute(UUID savingsGoalId, Money amount);
+    SavingsGoal execute(UUID userId, UUID savingsGoalId, Money amount);
 }

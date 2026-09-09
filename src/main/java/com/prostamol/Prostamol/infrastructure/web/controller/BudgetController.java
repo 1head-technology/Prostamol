@@ -1,6 +1,5 @@
 package com.prostamol.Prostamol.infrastructure.web.controller;
 
-import com.prostamol.Prostamol.domain.model.budget.Budget;
 import com.prostamol.Prostamol.domain.model.shared.DateRange;
 import com.prostamol.Prostamol.domain.model.shared.Money;
 import com.prostamol.Prostamol.domain.port.in.budget.AddBudgetLineUseCase;
@@ -19,7 +18,6 @@ import com.prostamol.Prostamol.infrastructure.web.dto.response.BudgetSummaryResp
 import com.prostamol.Prostamol.infrastructure.web.mapper.BudgetWebMapper;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
-import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
@@ -34,7 +32,6 @@ public class BudgetController {
 
     private final CreateBudgetUseCase createBudget;
     private final GetBudgetsUseCase getBudgets;
-    private final GetBudgetUseCase getBudget;
     private final GetBudgetSummaryUseCase getSummary;
     private final UpdateBudgetUseCase updateBudget;
     private final AddBudgetLineUseCase addBudgetLine;
@@ -44,7 +41,6 @@ public class BudgetController {
     public BudgetController(
         CreateBudgetUseCase createBudget,
         GetBudgetsUseCase getBudgets,
-        GetBudgetUseCase getBudget,
         GetBudgetSummaryUseCase getSummary,
         UpdateBudgetUseCase updateBudget,
         AddBudgetLineUseCase addBudgetLine,
@@ -53,7 +49,6 @@ public class BudgetController {
     ) {
         this.createBudget = createBudget;
         this.getBudgets = getBudgets;
-        this.getBudget = getBudget;
         this.getSummary = getSummary;
         this.updateBudget = updateBudget;
         this.addBudgetLine = addBudgetLine;
@@ -91,8 +86,11 @@ public class BudgetController {
     }
 
     @GetMapping("/budgets/{budgetId}/summary")
-    public BudgetSummaryResponse summary(@PathVariable UUID budgetId) {
-        return mapper.toSummaryResponse(getSummary.execute(budgetId));
+    public BudgetSummaryResponse summary(
+        @AuthenticationPrincipal UUID userId,
+        @PathVariable UUID budgetId
+    ) {
+        return mapper.toSummaryResponse(getSummary.execute(userId, budgetId));
     }
 
     @PatchMapping("/budgets/{budgetId}")
@@ -101,12 +99,7 @@ public class BudgetController {
         @PathVariable UUID budgetId,
         @Valid @RequestBody UpdateBudgetRequest request
     ) {
-        Budget budget = getBudget.execute(budgetId);
-        if (!budget.getUserId().equals(userId)) {
-            throw new AccessDeniedException("Budget does not belong to the authenticated user");
-        }
-
-        return mapper.toResponse(updateBudget.execute(toUpdateCommand(budgetId, request)));
+        return mapper.toResponse(updateBudget.execute(toUpdateCommand(userId, budgetId, request)));
     }
 
     @PostMapping("/budgets/{budgetId}/lines")
@@ -116,12 +109,7 @@ public class BudgetController {
         @PathVariable UUID budgetId,
         @Valid @RequestBody AddBudgetLineRequest request
     ) {
-        Budget budget = getBudget.execute(budgetId);
-        if (!budget.getUserId().equals(userId)) {
-            throw new AccessDeniedException("Budget does not belong to the authenticated user");
-        }
-
-        return mapper.toResponse(addBudgetLine.execute(toAddLineCommand(budgetId, request)));
+        return mapper.toResponse(addBudgetLine.execute(toAddLineCommand(userId, budgetId, request)));
     }
 
     @PatchMapping("/budgets/{budgetId}/lines/{lineId}")
@@ -131,12 +119,7 @@ public class BudgetController {
         @PathVariable UUID lineId,
         @Valid @RequestBody UpdateBudgetLineRequest request
     ) {
-        Budget budget = getBudget.execute(budgetId);
-        if (!budget.getUserId().equals(userId)) {
-            throw new AccessDeniedException("Budget does not belong to the authenticated user");
-        }
-
-        return mapper.toResponse(updateBudgetLine.execute(toUpdateLineCommand(budgetId, lineId, request)));
+        return mapper.toResponse(updateBudgetLine.execute(toUpdateLineCommand(userId, budgetId, lineId, request)));
     }
 
     // ── Admin endpoints ──────────────────────────────────────────────────────
@@ -177,12 +160,7 @@ public class BudgetController {
         @PathVariable UUID budgetId,
         @Valid @RequestBody UpdateBudgetRequest request
     ) {
-        Budget budget = getBudget.execute(budgetId);
-        if (!budget.getUserId().equals(userId)) {
-            throw new IllegalArgumentException("Budget " + budgetId + " does not belong to user " + userId);
-        }
-
-        return mapper.toResponse(updateBudget.execute(toUpdateCommand(budgetId, request)));
+        return mapper.toResponse(updateBudget.execute(toUpdateCommand(userId, budgetId, request)));
     }
 
     @PreAuthorize("hasRole('ADMIN')")
@@ -193,12 +171,7 @@ public class BudgetController {
         @PathVariable UUID budgetId,
         @Valid @RequestBody AddBudgetLineRequest request
     ) {
-        Budget budget = getBudget.execute(budgetId);
-        if (!budget.getUserId().equals(userId)) {
-            throw new IllegalArgumentException("Budget " + budgetId + " does not belong to user " + userId);
-        }
-
-        return mapper.toResponse(addBudgetLine.execute(toAddLineCommand(budgetId, request)));
+        return mapper.toResponse(addBudgetLine.execute(toAddLineCommand(userId, budgetId, request)));
     }
 
     @PreAuthorize("hasRole('ADMIN')")
@@ -209,16 +182,12 @@ public class BudgetController {
         @PathVariable UUID lineId,
         @Valid @RequestBody UpdateBudgetLineRequest request
     ) {
-        Budget budget = getBudget.execute(budgetId);
-        if (!budget.getUserId().equals(userId)) {
-            throw new IllegalArgumentException("Budget " + budgetId + " does not belong to user " + userId);
-        }
-
-        return mapper.toResponse(updateBudgetLine.execute(toUpdateLineCommand(budgetId, lineId, request)));
+        return mapper.toResponse(updateBudgetLine.execute(toUpdateLineCommand(userId, budgetId, lineId, request)));
     }
 
-    private UpdateBudgetUseCase.Command toUpdateCommand(UUID budgetId, UpdateBudgetRequest request) {
+    private UpdateBudgetUseCase.Command toUpdateCommand(UUID userId, UUID budgetId, UpdateBudgetRequest request) {
         return new UpdateBudgetUseCase.Command(
+            userId,
             budgetId,
             request.name(),
             request.from(),
@@ -227,8 +196,9 @@ public class BudgetController {
         );
     }
 
-    private AddBudgetLineUseCase.Command toAddLineCommand(UUID budgetId, AddBudgetLineRequest request) {
+    private AddBudgetLineUseCase.Command toAddLineCommand(UUID userId, UUID budgetId, AddBudgetLineRequest request) {
         return new AddBudgetLineUseCase.Command(
+            userId,
             budgetId,
             request.categoryId(),
             Money.of(request.plannedAmount(), request.currency())
@@ -236,11 +206,13 @@ public class BudgetController {
     }
 
     private UpdateBudgetLineUseCase.Command toUpdateLineCommand(
+        UUID userId,
         UUID budgetId,
         UUID lineId,
         UpdateBudgetLineRequest request
     ) {
         return new UpdateBudgetLineUseCase.Command(
+            userId,
             budgetId,
             lineId,
             request.categoryId(),

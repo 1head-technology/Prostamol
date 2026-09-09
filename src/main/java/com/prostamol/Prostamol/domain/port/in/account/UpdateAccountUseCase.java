@@ -10,6 +10,7 @@ public interface UpdateAccountUseCase {
     Account execute(Command command);
 
     record Command(
+        UUID userId,
         UUID accountId,
         String name,
         AccountType type,
