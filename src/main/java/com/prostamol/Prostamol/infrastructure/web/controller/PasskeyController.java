@@ -60,6 +60,7 @@ public class PasskeyController {
         passkeys.delete(userId, id);
     }
 
+
     @PostMapping("/auth/passkeys/options")
     public PasskeyService.Options loginOptions() throws IOException {
         return passkeys.startLogin();
