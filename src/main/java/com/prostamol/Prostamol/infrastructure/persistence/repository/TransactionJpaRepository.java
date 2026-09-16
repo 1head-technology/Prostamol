@@ -8,14 +8,18 @@ import java.util.List;
 import java.util.UUID;
 
 public interface TransactionJpaRepository extends JpaRepository<TransactionJpaEntity, UUID> {
-    List<TransactionJpaEntity> findAllByAccountId(UUID accountId);
-    List<TransactionJpaEntity> findAllByUserId(UUID userId);
-    List<TransactionJpaEntity> findAllByAccountIdAndDateBetween(
+
+    List<TransactionJpaEntity> findAllByAccountIdOrderByDateDescCreatedAtDesc(UUID accountId);
+
+    List<TransactionJpaEntity> findAllByUserIdOrderByDateDescCreatedAtDesc(UUID userId);
+
+    List<TransactionJpaEntity> findAllByAccountIdAndDateBetweenOrderByDateDescCreatedAtDesc(
         UUID accountId,
         LocalDate from,
         LocalDate to
     );
-    List<TransactionJpaEntity> findAllByUserIdAndCategoryIdAndDateBetween(
+
+    List<TransactionJpaEntity> findAllByUserIdAndCategoryIdAndDateBetweenOrderByDateDescCreatedAtDesc(
         UUID userId,
         UUID categoryId,
         LocalDate from,

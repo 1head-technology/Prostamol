@@ -8,8 +8,10 @@ import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
+import org.hibernate.annotations.CreationTimestamp;
 
 import java.math.BigDecimal;
+import java.time.Instant;
 import java.time.LocalDate;
 import java.util.UUID;
 
@@ -54,6 +56,10 @@ public class TransactionJpaEntity {
     @Enumerated(EnumType.STRING)
     @Column(name = "recurrence_frequency")
     private RecurrenceFrequency recurrenceFrequency;
+
+    @CreationTimestamp
+    @Column(name = "created_at", nullable = false, updatable = false)
+    private Instant createdAt;
 
     protected TransactionJpaEntity() {}
 
@@ -120,5 +126,8 @@ public class TransactionJpaEntity {
     }
     public RecurrenceFrequency getRecurrenceFrequency() {
         return recurrenceFrequency;
+    }
+    public Instant getCreatedAt() {
+        return createdAt;
     }
 }

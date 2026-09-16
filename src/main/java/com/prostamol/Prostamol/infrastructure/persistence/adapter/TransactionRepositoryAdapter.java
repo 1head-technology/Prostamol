@@ -31,7 +31,9 @@ public class TransactionRepositoryAdapter implements TransactionRepositoryPort {
     @Override
     public List<Transaction> saveAll(List<Transaction> transactions) {
         return jpaRepository.saveAll(transactions.stream().map(mapper::toJpaEntity).collect(Collectors.toList()))
-                .stream().map(mapper::toDomain).collect(Collectors.toList());
+            .stream()
+            .map(mapper::toDomain)
+            .collect(Collectors.toList());
     }
 
     @Override
@@ -46,12 +48,18 @@ public class TransactionRepositoryAdapter implements TransactionRepositoryPort {
 
     @Override
     public List<Transaction> findAllByAccountId(UUID accountId) {
-        return jpaRepository.findAllByAccountId(accountId).stream().map(mapper::toDomain).collect(Collectors.toList());
+        return jpaRepository.findAllByAccountIdOrderByDateDescCreatedAtDesc(accountId)
+            .stream()
+            .map(mapper::toDomain)
+            .collect(Collectors.toList());
     }
 
     @Override
     public List<Transaction> findAllByUserId(UUID userId) {
-        return jpaRepository.findAllByUserId(userId).stream().map(mapper::toDomain).collect(Collectors.toList());
+        return jpaRepository.findAllByUserIdOrderByDateDescCreatedAtDesc(userId)
+            .stream()
+            .map(mapper::toDomain)
+            .collect(Collectors.toList());
     }
 
     @Override
@@ -60,8 +68,10 @@ public class TransactionRepositoryAdapter implements TransactionRepositoryPort {
         LocalDate from,
         LocalDate to
     ) {
-        return jpaRepository.findAllByAccountIdAndDateBetween(accountId, from, to)
-                .stream().map(mapper::toDomain).collect(Collectors.toList());
+        return jpaRepository.findAllByAccountIdAndDateBetweenOrderByDateDescCreatedAtDesc(accountId, from, to)
+            .stream()
+            .map(mapper::toDomain)
+            .collect(Collectors.toList());
     }
 
     @Override
@@ -71,7 +81,9 @@ public class TransactionRepositoryAdapter implements TransactionRepositoryPort {
         LocalDate from,
         LocalDate to
     ) {
-        return jpaRepository.findAllByUserIdAndCategoryIdAndDateBetween(userId, categoryId, from, to)
-                .stream().map(mapper::toDomain).collect(Collectors.toList());
+        return jpaRepository.findAllByUserIdAndCategoryIdAndDateBetweenOrderByDateDescCreatedAtDesc(userId, categoryId, from, to)
+            .stream()
+            .map(mapper::toDomain)
+            .collect(Collectors.toList());
     }
 }
