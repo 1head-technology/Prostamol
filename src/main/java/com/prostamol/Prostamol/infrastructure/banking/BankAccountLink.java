@@ -15,6 +15,8 @@ public class BankAccountLink {
     @Column(nullable = false) String remoteUid;
     @Column(nullable = false, length = 3) String currency;
     @Column(precision = 19, scale = 4) BigDecimal bookedBalance;
+    @Column(precision = 19, scale = 4) BigDecimal availableBalance;
     Instant balanceUpdatedAt;
+    BigDecimal balance() { return bookedBalance != null ? bookedBalance : availableBalance; }
     protected BankAccountLink() {}
 }

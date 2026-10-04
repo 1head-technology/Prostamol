@@ -99,9 +99,10 @@ accounts when the bank returns the same primary identification hash and currency
   scheduler retains manual sync. Expired/disconnected connections are not fetched. Provider-reported expired sessions are marked `EXPIRED`; closed, revoked, or missing
   sessions are marked `FAILED`. These connections stop background retries and require new authorization.
   Other provider failures retain the current status and can be retried.
-- Bank account balances use the latest bank snapshot (`ITBD`, falling back to `CLBD`), including
+- Bank account balances prefer the booked snapshot (`ITBD`, falling back to `CLBD`), then
+  the available snapshot (`ITAV`, falling back to `CLAV`), including
   negative balances. They are not computed from incomplete imported history or manual entries.
-  If the bank supplies no supported booked balance, the existing balance endpoint returns 409;
+  If the bank supplies neither a supported booked nor available balance, the existing balance endpoint returns 409;
   the connection's balance fields are null. After disconnect, the last snapshot remains and can
   be stale; display its `balanceUpdatedAt`. Manual accounts keep their existing balance calculation.
 - Session IDs are stored in the database, so database backups need the same protection as other
@@ -125,19 +126,27 @@ in the API error and connection `lastError`. HTTP 401 alone does not prove conse
 For other authorization errors, inspect the failed request in the Enable Banking control
 panel under Applications → Requests. Raw provider messages and details are not exposed.
 
-A balance HTTP 409 means there is no saved supported booked balance for that account.
+A balance HTTP 409 means there is no saved supported balance for that account.
 Check the connection error and last successful sync first: a failed sync rolls back all
 new balances and imports, preserving any older snapshots. After a successful sync, an
-account can still lack an `ITBD` or `CLBD` balance in its own currency. Other accounts can
-have balances normally. Available balances are not substituted for booked balances, and
-missing balances are not treated as zero.
+account can still lack any supported balance in its own currency. Other accounts can
+have balances normally. Missing balances are not treated as zero.
 
-When a successful balance response has no supported booked balance, the backend emits a
-warning beginning `Enable Banking: no supported booked balance`. It includes the requested
+Connection account objects expose `bookedBalance` and `availableBalance` separately.
+Use the new `balance` field for display: it prefers booked and falls back to available.
+For Revolut's available-only response, `bookedBalance` stays null, while `availableBalance`,
+`balance`, and `balanceUpdatedAt` are populated. The existing account balance endpoint also
+uses this fallback without changing its response shape. Available balances can include
+pending holds and differ from booked balances. Existing connections need only a sync after
+deployment; reconnecting is unnecessary. Hibernate adds the nullable `available_balance`
+column through the existing `ddl-auto=update` configuration.
+
+When a successful balance response has no supported balance, the backend emits a
+warning beginning `Enable Banking: no supported balance`. It includes the requested
 currency, balance count, and up to 20 distinct type/currency pairs (for example `ITAV/EUR`).
 Amounts, account/session IDs, and raw response bodies are excluded; malformed codes are
 replaced with `invalid`. Deploy this version and manually sync an existing connection to
-diagnose available-only balances, currency mismatches, or empty balance lists. The request
+diagnose unsupported types, currency mismatches, or empty balance lists. The request
 log in the control panel can confirm HTTP status without showing the response body.
 
 Disconnect also completes locally when Enable Banking reports `EXPIRED_SESSION`,

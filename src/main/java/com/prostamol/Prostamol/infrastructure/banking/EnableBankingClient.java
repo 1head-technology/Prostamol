@@ -128,18 +128,15 @@ public class EnableBankingClient implements BankingProviderPort {
         }
         return new Page(entries, text(page, "continuation_key"), skipped);
     }
-    @Override public Money balance(String uid, String currency) {
+    @Override public Balances balance(String uid, String currency) {
         return parseBalance(request("GET", "/accounts/" + encode(uid) + "/balances", null), currency);
     }
-    static Money parseBalance(JsonNode response, String currency) {
+    static Balances parseBalance(JsonNode response, String currency) {
         JsonNode balances = response.path("balances");
         if (!balances.isArray()) throw new BankingException(502, "Enable Banking response missing balances");
-        for (String type : List.of("ITBD", "CLBD")) {
-            for (JsonNode b : balances) {
-                if (type.equals(text(b, "balance_type")) && currency.equals(text(b.path("balance_amount"), "currency")))
-                    return money(b.path("balance_amount"));
-            }
-        }
+        Money booked = selectBalance(balances, currency, List.of("ITBD", "CLBD"));
+        Money available = selectBalance(balances, currency, List.of("ITAV", "CLAV"));
+        if (booked != null || available != null) return new Balances(booked, available);
         // Diagnose unsupported types without recording amounts, account IDs or raw responses.
         Set<String> offered = new LinkedHashSet<>();
         for (JsonNode b : balances) {
@@ -147,9 +144,18 @@ public class EnableBankingClient implements BankingProviderPort {
             offered.add(diagnosticCode(text(b, "balance_type"), 4) + "/"
                 + diagnosticCode(text(b.path("balance_amount"), "currency"), 3));
         }
-        log.warn("Enable Banking: no supported booked balance for currency={}; balanceCount={}; "
-            + "offeredTypesAndCurrencies={} (up to 20); supportedTypes=[ITBD, CLBD]",
+        log.warn("Enable Banking: no supported balance for currency={}; balanceCount={}; "
+            + "offeredTypesAndCurrencies={} (up to 20); supportedTypes=[ITBD, CLBD, ITAV, CLAV]",
             diagnosticCode(currency, 3), balances.size(), offered);
+        return null;
+    }
+    private static Money selectBalance(JsonNode balances, String currency, List<String> types) {
+        for (String type : types) {
+            for (JsonNode b : balances) {
+                if (type.equals(text(b, "balance_type")) && currency.equals(text(b.path("balance_amount"), "currency")))
+                    return money(b.path("balance_amount"));
+            }
+        }
         return null;
     }
     private static String diagnosticCode(String value, int length) {

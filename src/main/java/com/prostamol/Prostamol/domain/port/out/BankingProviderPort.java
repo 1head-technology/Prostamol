@@ -16,6 +16,8 @@ public interface BankingProviderPort {
     Authorization authorize(Bank bank, String psuType, String state, String userId, Instant validUntil);
     Session exchange(String code);
     Page transactions(String accountUid, LocalDate from, LocalDate to, String continuationKey);
-    Money balance(String accountUid, String currency);
+    /** Null when neither a booked nor an available balance is supplied. */
+    record Balances(Money booked, Money available) {}
+    Balances balance(String accountUid, String currency);
     void disconnect(String sessionId);
 }

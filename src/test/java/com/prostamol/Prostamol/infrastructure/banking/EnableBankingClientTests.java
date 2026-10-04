@@ -79,22 +79,43 @@ class EnableBankingClientTests {
                 {"balance_type":"ITBD","balance_amount":{"amount":"-23.50","currency":"EUR"}}
             ]}
             """);
-        assertEquals(new java.math.BigDecimal("-23.50"), EnableBankingClient.parseBalance(response, "EUR").amount());
+        assertEquals(new java.math.BigDecimal("-23.50"), EnableBankingClient.parseBalance(response, "EUR").booked().amount());
         var closing = new ObjectMapper().readTree("""
             {"balances":[{"balance_type":"CLBD","balance_amount":{"amount":"0","currency":"EUR"}}]}
             """);
-        assertEquals(0, EnableBankingClient.parseBalance(closing, "EUR").amount().signum());
+        assertEquals(0, EnableBankingClient.parseBalance(closing, "EUR").booked().amount().signum());
         assertNull(EnableBankingClient.parseBalance(closing, "GBP"));
     }
 
-    @Test void availableOnlyAndEmptyBalancesRemainUnavailableInsteadOfBecomingZero() {
+    @Test void availableOnlyBalancesAreKeptSeparateAndEmptyBalancesRemainUnavailable() {
         var available = new ObjectMapper().readTree("""
             {"balances":[{"balance_type":"ITAV","balance_amount":{"amount":"100","currency":"EUR"}}]}
             """);
-        assertNull(EnableBankingClient.parseBalance(available, "EUR"));
+        var parsed = EnableBankingClient.parseBalance(available, "EUR");
+        assertNull(parsed.booked());
+        assertEquals(new java.math.BigDecimal("100"), parsed.available().amount());
         assertNull(EnableBankingClient.parseBalance(new ObjectMapper().readTree("{\"balances\":[]}"), "EUR"));
         assertThrows(BankingException.class,
             () -> EnableBankingClient.parseBalance(new ObjectMapper().readTree("{}"), "EUR"));
+    }
+
+    @Test void availableBalancePrefersInterimAndFiltersCurrencyWithoutReplacingBooked() {
+        var response = new ObjectMapper().readTree("""
+            {"balances":[
+                {"balance_type":"ITAV","balance_amount":{"amount":"999","currency":"USD"}},
+                {"balance_type":"CLAV","balance_amount":{"amount":"12","currency":"EUR"}},
+                {"balance_type":"ITAV","balance_amount":{"amount":"0","currency":"EUR"}},
+                {"balance_type":"CLBD","balance_amount":{"amount":"20","currency":"EUR"}}
+            ]}
+            """);
+        var balances = EnableBankingClient.parseBalance(response, "EUR");
+        assertEquals(new java.math.BigDecimal("20"), balances.booked().amount());
+        assertEquals(0, balances.available().amount().signum());
+        var closing = EnableBankingClient.parseBalance(new ObjectMapper().readTree("""
+            {"balances":[{"balance_type":"CLAV","balance_amount":{"amount":"-3.50","currency":"EUR"}}]}
+            """), "EUR");
+        assertNull(closing.booked());
+        assertEquals(new java.math.BigDecimal("-3.50"), closing.available().amount());
     }
 
     @Test void unsupportedBalanceDiagnosticsExplainTypesWithoutExposingPrivateData() {
@@ -111,13 +132,13 @@ class EnableBankingClientTests {
                     {}
                 ]}
                 """);
-            assertNull(EnableBankingClient.parseBalance(response, "EUR"));
+            assertNull(EnableBankingClient.parseBalance(response, "GBP"));
             assertEquals(1, appender.list.size());
             var event = appender.list.getFirst();
             assertEquals(ch.qos.logback.classic.Level.WARN, event.getLevel());
-            assertEquals("Enable Banking: no supported booked balance for currency=EUR; balanceCount=4; "
+            assertEquals("Enable Banking: no supported balance for currency=GBP; balanceCount=4; "
                 + "offeredTypesAndCurrencies=[ITAV/EUR, CLBD/USD, invalid/invalid, missing/missing] (up to 20); "
-                + "supportedTypes=[ITBD, CLBD]", event.getFormattedMessage());
+                + "supportedTypes=[ITBD, CLBD, ITAV, CLAV]", event.getFormattedMessage());
 
             appender.list.clear();
             assertNotNull(EnableBankingClient.parseBalance(response, "USD"));

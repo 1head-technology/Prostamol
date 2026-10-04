@@ -11,8 +11,8 @@ public class BankBalanceAdapter implements BankBalanceRepositoryPort {
     public BankBalanceAdapter(BankAccountLinkRepository links) { this.links = links; }
     @Override public Optional<Money> findBankBalance(UUID accountId) {
         return links.findById(accountId).map(link -> {
-            if (link.bookedBalance == null) throw new BankingException(409, "Bank booked balance is unavailable; check connection sync status");
-            return Money.of(link.bookedBalance, link.currency);
+            if (link.balance() == null) throw new BankingException(409, "Bank balance is unavailable; check connection sync status");
+            return Money.of(link.balance(), link.currency);
         });
     }
 }

@@ -23,7 +23,8 @@ public class BankingService {
     private final jakarta.persistence.EntityManager entityManager;
 
     public record Started(UUID connectionId, String url) {}
-    public record AccountView(UUID accountId, String currency, java.math.BigDecimal bookedBalance, Instant balanceUpdatedAt) {}
+    public record AccountView(UUID accountId, String currency, java.math.BigDecimal bookedBalance, Instant balanceUpdatedAt,
+        java.math.BigDecimal availableBalance, java.math.BigDecimal balance) {}
     public record ConnectionView(UUID id, String bankName, String country, String status, Instant validUntil,
         Instant lastSyncedAt, String lastError, int skippedTransactions, List<AccountView> accounts) {}
 
@@ -151,9 +152,14 @@ public class BankingService {
                         continuation = page.continuationKey();
                         if (continuation != null && !seen.add(continuation)) throw new BankingException(502, "Bank repeated a transaction page");
                     } while (continuation != null);
-                    Money balance = provider.balance(link.remoteUid, link.currency);
-                    link.bookedBalance = balance == null ? null : balance.amount();
-                    link.balanceUpdatedAt = balance == null ? null : Instant.now();
+                    var balances = provider.balance(link.remoteUid, link.currency);
+                    Money booked = balances == null ? null : balances.booked();
+                    Money available = balances == null ? null : balances.available();
+                    if (booked != null) Money.zero(link.currency).assertSameCurrency(booked);
+                    if (available != null) Money.zero(link.currency).assertSameCurrency(available);
+                    link.bookedBalance = booked == null ? null : booked.amount();
+                    link.availableBalance = available == null ? null : available.amount();
+                    link.balanceUpdatedAt = link.balance() == null ? null : Instant.now();
                     links.save(link);
                 }
                 c.lastSyncedAt = Instant.now(); c.lastError = null; c.skippedTransactions = skipped;
@@ -217,7 +223,7 @@ public class BankingService {
         String status = "ACTIVE".equals(c.status) && !c.validUntil.isAfter(Instant.now()) ? "EXPIRED" : c.status;
         return new ConnectionView(c.id, c.bankName, c.country, status, c.validUntil, c.lastSyncedAt, c.lastError,
             c.skippedTransactions, links.findAllByConnectionIdOrderByAccountId(c.id).stream()
-                .map(a -> new AccountView(a.accountId, a.currency, a.bookedBalance, a.balanceUpdatedAt)).toList());
+                .map(a -> new AccountView(a.accountId, a.currency, a.bookedBalance, a.balanceUpdatedAt, a.availableBalance, a.balance())).toList());
     }
     static UUID stableId(String value) { return UUID.nameUUIDFromBytes(("enable-banking:" + value).getBytes(StandardCharsets.UTF_8)); }
     static String hash(String value) {

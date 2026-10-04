@@ -52,7 +52,7 @@ class BankingIntegrationTests {
             List.of(new BankingProviderPort.RemoteAccount("remote", "stable-account", "Test account", "EUR"))));
         when(provider.transactions(anyString(), any(), any(), isNull())).thenReturn(new BankingProviderPort.Page(List.of(entry("one")), "next+/=", 1));
         when(provider.transactions(anyString(), any(), any(), eq("next+/="))).thenReturn(new BankingProviderPort.Page(List.of(entry("two")), null, 0));
-        when(provider.balance(anyString(), eq("EUR"))).thenReturn(Money.of(new BigDecimal("-23.50"), "EUR"));
+        when(provider.balance(anyString(), eq("EUR"))).thenReturn(new BankingProviderPort.Balances(Money.of(new BigDecimal("-23.50"), "EUR"), null));
     }
     BankingProviderPort.Entry entry(String ref) {
         return new BankingProviderPort.Entry(ref, Money.of(new BigDecimal("10.50"), "EUR"), false, LocalDate.now(), "Purchase");
@@ -167,6 +167,42 @@ class BankingIntegrationTests {
         mvc.perform(post("/api/v1/banking/connections/complete").header("Authorization", bearer).contentType("application/json")
             .content(new tools.jackson.databind.ObjectMapper().writeValueAsString(Map.of("state", state, "code", "code"))))
             .andExpect(status().isBadRequest());
+    }
+
+    @Test void availableOnlyBalanceReachesConnectionAndAccountEndpointsAndClearsStaleSnapshots() throws Exception {
+        var c = connect();
+        var available = new BankingProviderPort.Balances(null, Money.of(new BigDecimal("42.50"), "EUR"));
+        when(provider.balance(anyString(), eq("EUR"))).thenReturn(available);
+        String bearer = "Bearer " + jwt.generateToken(user, "bank-test@example.com", com.prostamol.Prostamol.domain.model.user.Role.USER);
+        mvc.perform(post("/api/v1/banking/connections/" + c.id() + "/sync").header("Authorization", bearer))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.accounts[0].bookedBalance").isEmpty())
+            .andExpect(jsonPath("$.accounts[0].availableBalance").value(42.50))
+            .andExpect(jsonPath("$.accounts[0].balance").value(42.50))
+            .andExpect(jsonPath("$.accounts[0].balanceUpdatedAt").isNotEmpty());
+        UUID accountId = c.accounts().getFirst().accountId();
+        mvc.perform(get("/api/v1/accounts/" + accountId + "/balance").header("Authorization", bearer))
+            .andExpect(status().isOk()).andExpect(jsonPath("$.balance").value(42.50));
+        var saved = links.findById(accountId).orElseThrow();
+        assertNull(saved.bookedBalance);
+        assertEquals(0, saved.availableBalance.compareTo(new BigDecimal("42.50")));
+
+        when(provider.balance(anyString(), eq("EUR"))).thenThrow(new BankingException(502, "Unavailable"));
+        assertThrows(BankingException.class, () -> service.sync(user, c.id()));
+        assertEquals(0, balance.execute(user, accountId).amount().compareTo(new BigDecimal("42.50")));
+
+        doReturn(new BankingProviderPort.Balances(Money.of(new BigDecimal("50"), "EUR"),
+            Money.of(new BigDecimal("40"), "EUR"))).when(provider).balance(anyString(), eq("EUR"));
+        assertEquals(0, service.sync(user, c.id()).accounts().getFirst().balance().compareTo(new BigDecimal("50")));
+        assertEquals(0, balance.execute(user, accountId).amount().compareTo(new BigDecimal("50")));
+
+        when(provider.balance(anyString(), eq("EUR"))).thenReturn(null);
+        var missing = service.sync(user, c.id()).accounts().getFirst();
+        assertNull(missing.bookedBalance());
+        assertNull(missing.availableBalance());
+        assertNull(missing.balance());
+        assertNull(missing.balanceUpdatedAt());
+        assertEquals(409, assertThrows(BankingException.class, () -> balance.execute(user, accountId)).status());
     }
 
     @Test void missingBankBalanceDoesNotReturnPartialHistoryAsBalance() {
