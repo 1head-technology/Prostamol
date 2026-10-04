@@ -19,6 +19,7 @@ import java.time.*;
 import java.util.*;
 
 public class EnableBankingClient implements BankingProviderPort {
+    private static final org.slf4j.Logger log = org.slf4j.LoggerFactory.getLogger(EnableBankingClient.class);
     private final HttpClient http = HttpClient.newBuilder().connectTimeout(Duration.ofSeconds(10)).build();
     private final ObjectMapper json = new ObjectMapper();
     private final String applicationId;
@@ -139,7 +140,20 @@ public class EnableBankingClient implements BankingProviderPort {
                     return money(b.path("balance_amount"));
             }
         }
+        // Diagnose unsupported types without recording amounts, account IDs or raw responses.
+        Set<String> offered = new LinkedHashSet<>();
+        for (JsonNode b : balances) {
+            if (offered.size() >= 20) break;
+            offered.add(diagnosticCode(text(b, "balance_type"), 4) + "/"
+                + diagnosticCode(text(b.path("balance_amount"), "currency"), 3));
+        }
+        log.warn("Enable Banking: no supported booked balance for currency={}; balanceCount={}; "
+            + "offeredTypesAndCurrencies={} (up to 20); supportedTypes=[ITBD, CLBD]",
+            diagnosticCode(currency, 3), balances.size(), offered);
         return null;
+    }
+    private static String diagnosticCode(String value, int length) {
+        return value == null ? "missing" : value.matches("[A-Z]{" + length + "}") ? value : "invalid";
     }
     @Override public void disconnect(String session) { request("DELETE", "/sessions/" + encode(session), null); }
     private static Money money(JsonNode n) { return Money.of(new BigDecimal(required(n, "amount")), required(n, "currency")); }

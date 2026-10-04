@@ -132,6 +132,14 @@ account can still lack an `ITBD` or `CLBD` balance in its own currency. Other ac
 have balances normally. Available balances are not substituted for booked balances, and
 missing balances are not treated as zero.
 
+When a successful balance response has no supported booked balance, the backend emits a
+warning beginning `Enable Banking: no supported booked balance`. It includes the requested
+currency, balance count, and up to 20 distinct type/currency pairs (for example `ITAV/EUR`).
+Amounts, account/session IDs, and raw response bodies are excluded; malformed codes are
+replaced with `invalid`. Deploy this version and manually sync an existing connection to
+diagnose available-only balances, currency mismatches, or empty balance lists. The request
+log in the control panel can confirm HTTP status without showing the response body.
+
 Disconnect also completes locally when Enable Banking reports `EXPIRED_SESSION`,
 `CLOSED_SESSION`, `REVOKED_SESSION`, or `SESSION_DOES_NOT_EXIST`: access has already ended.
 Imported accounts, transactions, and the last balance snapshots remain available. Other

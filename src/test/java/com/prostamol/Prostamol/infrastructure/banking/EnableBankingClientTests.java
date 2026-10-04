@@ -96,4 +96,38 @@ class EnableBankingClientTests {
         assertThrows(BankingException.class,
             () -> EnableBankingClient.parseBalance(new ObjectMapper().readTree("{}"), "EUR"));
     }
+
+    @Test void unsupportedBalanceDiagnosticsExplainTypesWithoutExposingPrivateData() {
+        var logger = (ch.qos.logback.classic.Logger) org.slf4j.LoggerFactory.getLogger(EnableBankingClient.class);
+        var appender = new ch.qos.logback.core.read.ListAppender<ch.qos.logback.classic.spi.ILoggingEvent>();
+        appender.start();
+        logger.addAppender(appender);
+        try {
+            var response = new ObjectMapper().readTree("""
+                {"account_id":"private-account", "balances":[
+                    {"balance_type":"ITAV","balance_amount":{"amount":"1234.56","currency":"EUR"}},
+                    {"balance_type":"CLBD","balance_amount":{"amount":"9876.54","currency":"USD"}},
+                    {"balance_type":"private-secret\\nforged-log","balance_amount":{"currency":"private-currency"}},
+                    {}
+                ]}
+                """);
+            assertNull(EnableBankingClient.parseBalance(response, "EUR"));
+            assertEquals(1, appender.list.size());
+            var event = appender.list.getFirst();
+            assertEquals(ch.qos.logback.classic.Level.WARN, event.getLevel());
+            assertEquals("Enable Banking: no supported booked balance for currency=EUR; balanceCount=4; "
+                + "offeredTypesAndCurrencies=[ITAV/EUR, CLBD/USD, invalid/invalid, missing/missing] (up to 20); "
+                + "supportedTypes=[ITBD, CLBD]", event.getFormattedMessage());
+
+            appender.list.clear();
+            assertNotNull(EnableBankingClient.parseBalance(response, "USD"));
+            assertTrue(appender.list.isEmpty(), "Supported booked balances should not emit a warning");
+
+            EnableBankingClient.parseBalance(new ObjectMapper().readTree("{\"balances\":[]}"), "EUR");
+            assertTrue(appender.list.getFirst().getFormattedMessage().contains("balanceCount=0"));
+        } finally {
+            logger.detachAppender(appender);
+            appender.stop();
+        }
+    }
 }
