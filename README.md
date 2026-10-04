@@ -278,6 +278,12 @@ infrastructure/
 - Application services are plain Java classes with no `@Service` annotation -- they are instantiated as beans in `BeanConfig`.
 - Infrastructure adapters implement the output ports, keeping the domain decoupled from persistence details.
 
+## Bank connections
+
+Enable Banking can import bank accounts and booked transactions, with manual and scheduled
+sync. See [setup, API endpoints, and frontend callback integration](docs/enable-banking.md).
+The integration is disabled by default until an API application and private key are configured.
+
 ## Passkeys
 
 The API supports passkey enrollment, passwordless JWT sign-in, and per-user passkey

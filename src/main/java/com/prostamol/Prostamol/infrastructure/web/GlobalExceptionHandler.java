@@ -14,6 +14,13 @@ import java.util.stream.Collectors;
 @RestControllerAdvice
 public class GlobalExceptionHandler {
 
+    @ExceptionHandler(com.prostamol.Prostamol.infrastructure.banking.BankingException.class)
+    public org.springframework.http.ResponseEntity<ErrorResponse> handleBanking(
+        com.prostamol.Prostamol.infrastructure.banking.BankingException ex) {
+        return org.springframework.http.ResponseEntity.status(ex.status())
+            .body(ErrorResponse.of(ex.status(), "Banking Error", ex.getMessage()));
+    }
+
     @ExceptionHandler(com.prostamol.Prostamol.infrastructure.security.passkey.PasskeyException.class)
     @ResponseStatus(HttpStatus.UNAUTHORIZED)
     public ErrorResponse handlePasskey(com.prostamol.Prostamol.infrastructure.security.passkey.PasskeyException ex) {
@@ -25,6 +32,13 @@ public class GlobalExceptionHandler {
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     public ErrorResponse handleIllegalArgument(IllegalArgumentException ex) {
         return ErrorResponse.of(HttpStatus.BAD_REQUEST.value(), "Bad Request", ex.getMessage());
+    }
+
+    @ExceptionHandler({jakarta.validation.ConstraintViolationException.class,
+        org.springframework.web.method.annotation.HandlerMethodValidationException.class})
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    public ErrorResponse handleRequestConstraint(Exception ex) {
+        return ErrorResponse.of(400, "Validation Failed", "Invalid request parameters");
     }
 
     @ExceptionHandler(AccessDeniedException.class)

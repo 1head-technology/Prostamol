@@ -7,6 +7,7 @@ import com.prostamol.Prostamol.domain.model.transaction.TransactionType;
 import com.prostamol.Prostamol.domain.port.in.account.GetAccountBalanceUseCase;
 import com.prostamol.Prostamol.domain.port.out.AccountRepositoryPort;
 import com.prostamol.Prostamol.domain.port.out.TransactionRepositoryPort;
+import com.prostamol.Prostamol.domain.port.out.BankBalanceRepositoryPort;
 import org.springframework.security.access.AccessDeniedException;
 
 import java.math.BigDecimal;
@@ -17,13 +18,20 @@ public class GetAccountBalanceService implements GetAccountBalanceUseCase {
 
     private final AccountRepositoryPort accountRepository;
     private final TransactionRepositoryPort transactionRepository;
+    private final BankBalanceRepositoryPort bankBalances;
 
     public GetAccountBalanceService(
         AccountRepositoryPort accountRepository,
         TransactionRepositoryPort transactionRepository
     ) {
+        this(accountRepository, transactionRepository, id -> java.util.Optional.empty());
+    }
+
+    public GetAccountBalanceService(AccountRepositoryPort accountRepository,
+        TransactionRepositoryPort transactionRepository, BankBalanceRepositoryPort bankBalances) {
         this.accountRepository = accountRepository;
         this.transactionRepository = transactionRepository;
+        this.bankBalances = bankBalances;
     }
 
     @Override
@@ -35,6 +43,9 @@ public class GetAccountBalanceService implements GetAccountBalanceUseCase {
         if (!account.getUserId().equals(userId)) {
             throw new AccessDeniedException("Account does not belong to the authenticated user");
         }
+
+        var bankBalance = bankBalances.findBankBalance(accountId);
+        if (bankBalance.isPresent()) return bankBalance.get();
 
         List<Transaction> transactions = transactionRepository.findAllByAccountId(accountId);
         String currency = account.getInitialBalance().currency();

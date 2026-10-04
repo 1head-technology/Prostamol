@@ -122,9 +122,10 @@ public class BeanConfig {
     @Bean
     public GetAccountBalanceUseCase getAccountBalanceUseCase(
         AccountRepositoryPort accountRepository,
-        TransactionRepositoryPort transactionRepository
+        TransactionRepositoryPort transactionRepository,
+        com.prostamol.Prostamol.domain.port.out.BankBalanceRepositoryPort bankBalances
     ) {
-        return new GetAccountBalanceService(accountRepository, transactionRepository);
+        return new GetAccountBalanceService(accountRepository, transactionRepository, bankBalances);
     }
 
     @Bean
