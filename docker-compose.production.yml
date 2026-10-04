@@ -13,4 +13,4 @@ services:
         extra_hosts:
             - "host.docker.internal:host-gateway"
         volumes:
-            - /etc/prostamol/secrets/enable-banking.pem:/run/secrets/enable-banking.pem:ro
+            - /etc/prostamol/secrets/banking-key.pem:/run/secrets/enable-banking.pem:ro
