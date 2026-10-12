@@ -93,7 +93,7 @@ public class EnableBankingClient implements BankingProviderPort {
         for (JsonNode a : session.path("accounts")) {
             if (text(a, "uid") == null) continue;
             accounts.add(new RemoteAccount(required(a, "uid"), required(a, "identification_hash"),
-                Optional.ofNullable(text(a, "details")).orElse(Optional.ofNullable(text(a, "product")).orElse("Bank account")),
+                Optional.ofNullable(text(a, "details")).orElse(text(a, "product")),
                 required(a, "currency")));
         }
         return new Session(required(session, "session_id"), Instant.parse(required(session.path("access"), "valid_until")), accounts);

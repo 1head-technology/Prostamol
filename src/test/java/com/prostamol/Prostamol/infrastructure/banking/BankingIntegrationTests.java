@@ -76,6 +76,24 @@ class BankingIntegrationTests {
         assertThrows(IllegalArgumentException.class, () -> service.complete(user, state, "code", null));
     }
 
+    @Test void unnamedAccountsFallBackToBankName() {
+        when(provider.exchange(anyString())).thenReturn(new BankingProviderPort.Session("session", Instant.now().plusSeconds(3600),
+            List.of(new BankingProviderPort.RemoteAccount("remote", "stable-account", null, "EUR"))));
+        UUID accountId = connect().accounts().getFirst().accountId();
+        assertEquals("Test Bank", accounts.findById(accountId).orElseThrow().getName());
+    }
+
+    @Test void multipleUnnamedAccountsIncludeCurrency() {
+        when(provider.exchange(anyString())).thenReturn(new BankingProviderPort.Session("session", Instant.now().plusSeconds(3600),
+            List.of(new BankingProviderPort.RemoteAccount("remote", "stable-account", null, "EUR"),
+                new BankingProviderPort.RemoteAccount("remote-usd", "second-account", null, "USD"))));
+        when(provider.transactions(eq("remote-usd"), any(), any(), isNull())).thenReturn(new BankingProviderPort.Page(List.of(), null, 0));
+        when(provider.balance(anyString(), eq("USD"))).thenReturn(null);
+        connect();
+        assertEquals(Set.of("Test Bank EUR", "Test Bank USD"),
+            new HashSet<>(accounts.findAllByUserId(user).stream().map(a -> a.getName()).toList()));
+    }
+
     @Test void ownershipAndAnonymousAccessAreEnforced() throws Exception {
         var started = service.start(user, "Test Bank", "IT", "personal");
         assertThrows(AccessDeniedException.class, () -> service.complete(UUID.randomUUID(), state, "code", null));

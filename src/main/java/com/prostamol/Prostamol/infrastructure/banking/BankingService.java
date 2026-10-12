@@ -87,7 +87,9 @@ public class BankingService {
                     if (link.accountId != null) entityManager.refresh(link, jakarta.persistence.LockModeType.PESSIMISTIC_WRITE);
                     if (link.accountId == null) {
                         link.accountId = accountId; link.userId = userId; link.identityHash = identity; link.currency = remote.currency();
-                        accounts.save(new Account(accountId, userId, remote.name().substring(0, Math.min(255, remote.name().length())),
+                        String name = remote.name() != null ? remote.name()
+                            : session.accounts().size() > 1 ? c.bankName + " " + remote.currency() : c.bankName;
+                        accounts.save(new Account(accountId, userId, name.substring(0, Math.min(255, name.length())),
                             AccountType.BANK_ACCOUNT, Money.zero(remote.currency())));
                     } else if (accounts.findById(accountId).isEmpty()) {
                         // Account deleted by user: do not silently recreate it or its history.

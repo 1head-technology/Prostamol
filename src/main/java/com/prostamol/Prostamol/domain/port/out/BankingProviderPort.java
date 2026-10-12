@@ -8,6 +8,7 @@ import java.util.List;
 public interface BankingProviderPort {
     record Bank(String name, String country, long maximumConsentValidity) {}
     record Authorization(String url) {}
+    /** {@code name} is null when the bank provides no account label. */
     record RemoteAccount(String uid, String identificationHash, String name, String currency) {}
     record Session(String id, Instant validUntil, List<RemoteAccount> accounts) {}
     record Entry(String reference, Money amount, boolean credit, LocalDate date, String description) {}
